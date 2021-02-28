@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[29]:
+# In[21]:
 
 
 import numpy as np
@@ -36,39 +36,27 @@ with gzip.open('C:\\Users\\Dan Adamov\\Desktop\\RHUL\\3rd Year\\Individual Proje
 
 class DecisionTree:
     def __init__(self, featureNmbr, featureThreshold, labels):
-        self.featureOfSample = featureNmbr
+        self.featureNmbr = featureNmbr
         self.featureThreshold = featureThreshold
         self.labels = labels
         self.right = None
         self.left = None
-                                                                                                                                                                                                                                          |
-                                                                                                                                                           |
-    def add(self, v):                                                                                                                                  |
-        if v is None:                                                                                                                              |
-                print("None Value")                                                                                                                |
-                return                                                                                                                             |
-                                                                                                                                                           |
-        if self.value is None:                                                                                                                     |
-            self.value = v                                                                                                      
-            return                      
-                                                                                                                                                           |
-        if v == self.value:                                                                                                                        
-            print("Already There")                              
-            return                                                                                                                             |
-                                                                                                                                                           |
-        if v > self.value:                                                                                                                         |
-            if self.right is None:                                                                                                             |
-                self.right = Tree(v)                                                                                                       |
-                return                                                                                                                     |
-            self.right.add(v)                                                                                                                  |
-            return                                                                                                                             |
-                                                                                                                                                           |
-        if v < self.value:                                                                                                                         |
-            if self.left is None:                                                                                                              |
-                self.left = Tree(v)                                                                                                        |
-                return                                                                                                                     |
-            self.left.add(v)                                                                                                                   |
-            return     
+    
+    
+    def add(self, curFeatureNumber, curFeatureThreshold, curLabels):
+        if curFeatureThreshold >= self.featureThreshold:
+            if self.right is None:
+                self.right = Tree(curFeatureNmbr,curFeatureThreshold, curLabels)
+                return
+            self.right.add(curFeatureNmbr,curFeatureThreshold, curLabels)
+            return
+        if curFeatureThreshold < featureThreshold:
+            if self.left is None:
+                self.left = Tree(curFeatureNmbr,curFeatureThreshold, curLabels)
+                return
+            self.left.add(curFeatureNmbr,curFeatureThreshold, curLabels)
+            return
+        
     
     def classifier(sample):
         curNode = self
@@ -82,19 +70,33 @@ class DecisionTree:
                 return #correect label
             if sample[self.featureOfSample]< self.featureThreshold:
                 return #correct label
-    
-def subDivider(X_train, y_train, label1, label2, numberOfIterations):
-    featureNmbr = featureOfSampleSelector(X_train, y_train, label1, label2)
-    threshold = featureThresholdSelector(X_train, y_train, label1, label2, featureNmbr[0])
-    root = DecisionTree(featureNmbr[0], threshold[0], label1, label2)
-    if numberOfIterations != 0:
-        root.left = subDivider() #X_train with samples whose selected feature is < threshold 
-        root.right = subDivider() #X_train with samples whose selected feature is >= threshold 
-        
-    return root
 
-def featureThresholdSelector2(X_train, y_train, previousThreshold, desiredLabel, comparisonLabel, featureNmbr):
+def featureThresholdSelector2(X_train, y_train, desiredLabel, comparisonLabel, featureNmbr):
     
+    instancesOfFeatureLabel = np.zeros(256)
+    instancesOfFeatureNotLabel = np.zeros(256)
+    cumulativeThreshold = np.zeros(256)
+    
+    for i in range(X_train.shape[0]):
+        if y_train[i] == desiredLabel:
+            instancesOfFeatureLabel[X_train[i,featureNmbr]] += 1
+        elif y_train[i] == comparisonLabel:
+            instancesOfFeatureNotLabel[X_train[i,featureNmbr]] += 1
+        
+        cumSumFeature = np.cumsum(instancesOfFeatureLabel[::-1])[::-1]
+        cumSumNotFeature = np.cumsum(instancesOfFeatureNotLabel[::-1])[::-1]
+        
+    np.subtract(cumSumFeature, cumSumNotFeature, cumulativeThreshold)
+    featureThreshold = np.argmax(abs(cumulativeThreshold))
+    
+    if cumulativeThreshold[featureThreshold] >= 0:
+        labels = desiredLabel, comparisonLabel
+        errorRate = 1 - cumSumFeature[featureThreshold] / cumSumFeature[0]
+    else:
+        labels = comparisonLabel, desiredLabel
+        errorRate = 1 - cumSumNotFeature[featureThreshold] / cumSumNotFeature[0]
+    
+    return featureThreshold, labels , errorRate
 
 def featureThresholdSelector(X_train, y_train, desiredLabel, comparisonLabel, featureNmbr):
     instancesOfFeatureLabel = np.zeros(256) # change 256 so it selects the range of the features in the set
@@ -118,31 +120,50 @@ def featureThresholdSelector(X_train, y_train, desiredLabel, comparisonLabel, fe
     # print(cumulativeThreshold)
     return featureThreshold, labels , errorRate
 
-def featureOfSampleSelector(X_train, y_train, desiredLabel, comparisonLabel):
+def featureOfSampleSelector(X_train, y_train, oldFeatureNmbr, desiredLabel, comparisonLabel):
     leastErrorRateFeatureIndex = 0
     leastErrorRate = 1.0
     curFeatureLabels = None
     # for featNbr in range(X_train.shape[1]):
-    for featNbr in range(10, 20):
-        curFeature = featureThresholdSelector(X_train, y_train, desiredLabel, comparisonLabel, featNbr)
-        if curFeature[2] < leastErrorRate:
-                leastErrorRateFeatureIndex = featNbr
-                leastErrorRate = curFeature[2]
-                curFeatureLabels = curFeature[1]
+    for featNbr in range(120, 140):
+        if featNbr != oldFeatureNmbr:
+            curFeature = featureThresholdSelector(X_train, y_train, desiredLabel, comparisonLabel, featNbr)
+            if curFeature[2] < leastErrorRate:
+                    leastErrorRateFeatureIndex = featNbr
+                    leastErrorRate = curFeature[2]
+                    curFeatureLabels = curFeature[1]
     return leastErrorRateFeatureIndex, curFeatureLabels, leastErrorRate
 
 
-# In[30]:
+# In[22]:
 
 
 featureThresholdSelector(X_trainMnist, y_trainMnist, y_trainMnist[1], y_trainMnist[5], 128)
 
 
-# In[31]:
+# In[24]:
 
 
 print(y_trainMnist[1], y_trainMnist[5])
-featureOfSampleSelector(X_trainMnist, y_trainMnist, y_trainMnist[1], y_trainMnist[5])
+featureOfSampleSelector(X_trainMnist, y_trainMnist, 136, y_trainMnist[1], y_trainMnist[5])
+
+
+# In[5]:
+
+
+X_trainMnist.shape
+
+
+# In[12]:
+
+
+print(np.amax(X_trainMnist[1]))
+print(np.amin(X_trainMnist[1]))
+print()
+print(np.amax(X_trainUsps[1]))
+print(np.amin(X_trainUsps[1]))
+
+# PERHAPS TURN NP.ZEROS TO A DICTIONARY SO I DO NOT HAVE TO DO WEIRD NORMALISATIONS 
 
 
 # In[ ]:
