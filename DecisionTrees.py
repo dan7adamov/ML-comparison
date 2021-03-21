@@ -35,7 +35,13 @@ with gzip.open('C:\\Users\\Dan Adamov\\Desktop\\RHUL\\3rd Year\\Individual Proje
     y_testMnist = np.frombuffer(testLabelBuffer, dtype = np.uint8, offset = 8)
 # Dowloaded Mnist dataset into train and test datasets(ratio 6:1 respectively) and have separate arrays for features and their corresponding labels
 
-treeLabels = 
+treeLabels = None
+
+class TreeLabelWrapper:
+    def __init__(self, labels):
+        self.labels = labels
+        treeLabels = labels
+        self.tree = DecisionTree()
 
 class DecisionTree:
     def __init__(self, featureNmbr = None, featureThreshold = None, predictedLabel = None):
@@ -79,7 +85,7 @@ class DecisionTree:
             if sample[self.featureOfSample]< self.featureThreshold:
                 return #correct label
 
-    def featureThresholdSelectorV2(X_train, y_train, featureNmbr):
+    def featureThresholdSelectorV2(X_train, y_train, featureNmbr, path):
 
         instancesOfFeatureLabel = np.zeros(256)
         instancesOfFeatureNotLabel = np.zeros(256)
@@ -94,21 +100,24 @@ class DecisionTree:
             #if !goodSample:
             #    continue
             
-            for t in self.path:
-                if t[2][0] == self.labels[0]:
-                    goodSample = True
-                    if X_train[i, t[0]] < t[1]:
-                        goodSample = False
-                        break
-                    if !goodSample:
-                        continue
-                else:
-                    goodSample = True
-                    if X_train[i, t[0]] < t[1]:
-                        goodSample = False
-                        break
-                    if !goodSample:
-                        continue
+#             for t in path:
+#                 if t[2][0] == treeLabels[0]:
+#                     goodSample = True
+#                     if X_train[i, t[0]] < t[1]:
+#                         goodSample = False
+#                         break
+#                     if !goodSample:
+#                         continue
+#                 else:
+#                     goodSample = True
+#                     if X_train[i, t[0]] < t[1]:
+#                         goodSample = False
+#                         break
+#                     if !goodSample:
+#                         continue
+
+            for t in path:
+                
                 
             # Processing only good samples
             if y_train[i] == labels[0]:
@@ -132,14 +141,14 @@ class DecisionTree:
         return featureThreshold, resultLabels, errorRate
     
     
-    def featureSelector(X_train, y_train):
+    def featureSelector(X_train, y_train, path):
         leastErrorRateFeatureIndex = 0
         leastErrorRate = 1.0
         curFeatureLabels = None
         # for featNbr in range(X_train.shape[1]):
-        for featNbr in range(120, 140):
+        for featNbr in range(120, 140): # DEBUG, HARDCODE
             if self.path and featNbr != self.path[-1][0] or !self.path:
-                curFeature = featureThresholdSelector(X_train, y_train, labels, featNbr)
+                curFeature = featureThresholdSelectorV2(X_train, y_train, featNbr, path)
                 if curFeature[2] < leastErrorRate:
                         leastErrorRateFeatureIndex = featNbr
                         leastErrorRate = curFeature[2]
