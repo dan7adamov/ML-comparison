@@ -92,32 +92,13 @@ class DecisionTree:
         cumulativeThreshold = np.zeros(256)
 
         for i in range(X_train.shape[0]):
-            #goodSample = True
-            #for t in self.path:
-            #    if ! t[2] (X_train[i, t[0]] , t[1]):
-            #        goodSample = False
-            #        break
-            #if !goodSample:
-            #    continue
-            
-#             for t in path:
-#                 if t[2][0] == treeLabels[0]:
-#                     goodSample = True
-#                     if X_train[i, t[0]] < t[1]:
-#                         goodSample = False
-#                         break
-#                     if !goodSample:
-#                         continue
-#                 else:
-#                     goodSample = True
-#                     if X_train[i, t[0]] < t[1]:
-#                         goodSample = False
-#                         break
-#                     if !goodSample:
-#                         continue
-
-            for t in path:
-                
+            goodSample = True
+            for t in path: # t is a tuple -> (featureNumber, featureThreshold, operator)
+                if ! t[2] (X_train[i, t[0]], t[1]):
+                    goodSample = False
+                    break
+            if !goodSample:
+                continue
                 
             # Processing only good samples
             if y_train[i] == labels[0]:
