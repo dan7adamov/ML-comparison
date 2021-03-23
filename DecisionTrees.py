@@ -101,9 +101,9 @@ class DecisionTree:
                 continue
                 
             # Processing only good samples
-            if y_train[i] == labels[0]:
+            if y_train[i] == treeLabels[0]:
                 instancesOfFeatureLabel[X_train[i,featureNmbr]] += 1
-            elif y_train[i] == labels[1]:
+            elif y_train[i] == treeLabel[1]:
                 instancesOfFeatureNotLabel[X_train[i,featureNmbr]] += 1
 
             cumSumFeature = np.cumsum(instancesOfFeatureLabel[::-1])[::-1]
@@ -113,13 +113,13 @@ class DecisionTree:
         featureThreshold = np.argmax(abs(cumulativeThreshold))
 
         if cumulativeThreshold[featureThreshold] >= 0:
-            resultLabels = labels
+            indicesOfTreeLabel = 0, 1
             errorRate = 1 - cumSumFeature[featureThreshold] / cumSumFeature[0]
         else:
-            resultLabels = labels[1], labels[0]
+            indicesOfTreeLabel = 1, 0
             errorRate = 1 - cumSumNotFeature[featureThreshold] / cumSumNotFeature[0]
 
-        return featureThreshold, resultLabels, errorRate
+        return featureThreshold, indicesOfTreeLabel, errorRate
     
     
     def featureSelector(X_train, y_train, path):
