@@ -36,6 +36,7 @@ with gzip.open('C:\\Users\\Dan Adamov\\Desktop\\RHUL\\3rd Year\\Individual Proje
 # Dowloaded Mnist dataset into train and test datasets(ratio 6:1 respectively) and have separate arrays for features and their corresponding labels
 
 treeLabels = None
+maxTreeDepth = 5
 
 class TreeLabelWrapper:
     def __init__(self, labels):
@@ -51,26 +52,35 @@ class DecisionTree:
         self.right = None
         self.left = None
         
-    def addRight(self, featNumb, featThresh):
-        self.right = DecisionTree(self.labels, path + [(self.featNumb, self.featThresh, labels)])
+#     def addRight(self, featNumb, featThresh):
+#         self.right = DecisionTree(self.labels, path + [(self.featNumb, self.featThresh, labels)])
     
-    def addLeft(self, featNumb, featThresh):
-        self.left = DecisionTree(self.labels, path + [(self.featNumb, self.featThresh, (labels[1], labels[0]) )])
+#     def addLeft(self, featNumb, featThresh):
+#         self.left = DecisionTree(self.labels, path + [(self.featNumb, self.featThresh, (labels[1], labels[0]) )])
     
-    def add(self, curFeatureNumber, curFeatureThreshold, curLabels):
-        if curFeatureThreshold >= self.featureThreshold:
-            if self.right is None:
-                self.right = Tree(curFeatureNmbr,curFeatureThreshold, curLabels)
-                return
-            self.right.add(curFeatureNmbr,curFeatureThreshold, curLabels)
-            return
-        if curFeatureThreshold < featureThreshold:
-            if self.left is None:
-                self.left = Tree(curFeatureNmbr,curFeatureThreshold, curLabels)
-                return
-            self.left.add(curFeatureNmbr,curFeatureThreshold, curLabels)
-            return
+#     def add(self, curFeatureNumber, curFeatureThreshold, curLabels):
+#         if curFeatureThreshold >= self.featureThreshold:
+#             if self.right is None:
+#                 self.right = Tree(curFeatureNmbr,curFeatureThreshold, curLabels)
+#                 return
+#             self.right.add(curFeatureNmbr,curFeatureThreshold, curLabels)
+#             return
+#         if curFeatureThreshold < featureThreshold:
+#             if self.left is None:
+#                 self.left = Tree(curFeatureNmbr,curFeatureThreshold, curLabels)
+#                 return
+#             self.left.add(curFeatureNmbr,curFeatureThreshold, curLabels)
+#             return
         
+    def treeFactory(self, X_train, y_train, path):
+        if len(path) >= maxTreeDepth:
+            return
+        featNum, featThr, labelIndices, errorRate = featureSelector(X_train, y_train, path)
+        self.featureNmbr, self.featureThreshold = featNum, featThr
+        self.right = DecisionTree(None, None, treeLabels[labelIndices[0]])
+        self.left = ............
+        self.right.treeFactory(X_train, y_train, path + [(featNum, featThr, op.__ge__)])
+        self.left.treeFactory(..........)
     
     def classifier(sample):
         curNode = self
@@ -125,16 +135,18 @@ class DecisionTree:
     def featureSelector(X_train, y_train, path):
         leastErrorRateFeatureIndex = 0
         leastErrorRate = 1.0
-        curFeatureLabels = None
+        curFeatureLabelIndices = None
         # for featNbr in range(X_train.shape[1]):
         for featNbr in range(120, 140): # DEBUG, HARDCODE
             if self.path and featNbr != self.path[-1][0] or !self.path:
                 curFeature = featureThresholdSelectorV2(X_train, y_train, featNbr, path)
                 if curFeature[2] < leastErrorRate:
                         leastErrorRateFeatureIndex = featNbr
+                        leastErrorRateFeatureThreshold = curFeature[0]
                         leastErrorRate = curFeature[2]
-                        curFeatureLabels = curFeature[1]
-        return leastErrorRateFeatureIndex, curFeatureLabels, leastErrorRate
+                        curFeatureLabelIndices = curFeature[1]
+        return leastErrorRateFeatureIndex, leastErrorRateFeatureThreshold, curFeatureLabelIndices, leastErrorRate
+
 
 def featureThresholdSelector(X_train, y_train, desiredLabel, comparisonLabel, featureNmbr):
     instancesOfFeatureLabel = np.zeros(256) # change 256 so it selects the range of the features in the set
