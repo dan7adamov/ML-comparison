@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[17]:
 
 
 import numpy as np
@@ -35,8 +35,8 @@ with gzip.open('C:\\Users\\Dan Adamov\\Desktop\\RHUL\\3rd Year\\Individual Proje
     y_testMnist = np.frombuffer(testLabelBuffer, dtype = np.uint8, offset = 8)
 # Dowloaded Mnist dataset into train and test datasets(ratio 6:1 respectively) and have separate arrays for features and their corresponding labels
 
-treeLabels = None
-maxTreeDepth = 5
+treeLabels = 0 , 1
+maxTreeDepth = 1
 
 class TreeLabelWrapper:
     def __init__(self, labels):
@@ -78,9 +78,9 @@ class DecisionTree:
         featNum, featThr, labelIndices, errorRate = featureSelector(X_train, y_train, path)
         self.featureNmbr, self.featureThreshold = featNum, featThr
         self.right = DecisionTree(None, None, treeLabels[labelIndices[0]])
-        self.left = ............
+        self.left = DecisionTree(None, None, treeLabels[labelIndices[1]])
         self.right.treeFactory(X_train, y_train, path + [(featNum, featThr, op.__ge__)])
-        self.left.treeFactory(..........)
+        self.left.treeFactory(X_train, y_train, path + [(featNum, featThr, op.__lt__)])
     
     def classifier(sample):
         curNode = self
@@ -95,7 +95,7 @@ class DecisionTree:
             if sample[self.featureOfSample]< self.featureThreshold:
                 return #correct label
 
-    def featureThresholdSelectorV2(X_train, y_train, featureNmbr, path):
+    def featureThresholdSelectorV2(self, X_train, y_train, featureNmbr, path):
 
         instancesOfFeatureLabel = np.zeros(256)
         instancesOfFeatureNotLabel = np.zeros(256)
@@ -103,17 +103,18 @@ class DecisionTree:
 
         for i in range(X_train.shape[0]):
             goodSample = True
-            for t in path: # t is a tuple -> (featureNumber, featureThreshold, operator)
-                if ! t[2] (X_train[i, t[0]], t[1]):
-                    goodSample = False
-                    break
-            if !goodSample:
-                continue
+            if path:
+                for t in path: # t is a tuple -> (featureNumber, featureThreshold, operator)
+                    if not t[2] (X_train[i, t[0]], t[1]):
+                        goodSample = False
+                        break
+                if not goodSample:
+                    continue
                 
             # Processing only good samples
             if y_train[i] == treeLabels[0]:
                 instancesOfFeatureLabel[X_train[i,featureNmbr]] += 1
-            elif y_train[i] == treeLabel[1]:
+            elif y_train[i] == treeLabels[1]:
                 instancesOfFeatureNotLabel[X_train[i,featureNmbr]] += 1
 
             cumSumFeature = np.cumsum(instancesOfFeatureLabel[::-1])[::-1]
@@ -132,13 +133,13 @@ class DecisionTree:
         return featureThreshold, indicesOfTreeLabel, errorRate
     
     
-    def featureSelector(X_train, y_train, path):
+    def featureSelector(self, X_train, y_train, path):
         leastErrorRateFeatureIndex = 0
         leastErrorRate = 1.0
         curFeatureLabelIndices = None
         # for featNbr in range(X_train.shape[1]):
         for featNbr in range(120, 140): # DEBUG, HARDCODE
-            if self.path and featNbr != self.path[-1][0] or !self.path:
+            if path and featNbr != path[-1][0] or not path:
                 curFeature = featureThresholdSelectorV2(X_train, y_train, featNbr, path)
                 if curFeature[2] < leastErrorRate:
                         leastErrorRateFeatureIndex = featNbr
@@ -171,10 +172,11 @@ def featureThresholdSelector(X_train, y_train, desiredLabel, comparisonLabel, fe
     return featureThreshold, labels , errorRate
 
 
-# In[22]:
+# In[18]:
 
 
-featureThresholdSelector(X_trainMnist, y_trainMnist, y_trainMnist[1], y_trainMnist[5], 128)
+test = DecisionTree()
+test.featureThresholdSelectorV2(X_trainMnist, y_trainMnist, 128, None)
 
 
 # In[24]:
