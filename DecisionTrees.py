@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[17]:
+# In[26]:
 
 
 import numpy as np
@@ -36,7 +36,7 @@ with gzip.open('C:\\Users\\Dan Adamov\\Desktop\\RHUL\\3rd Year\\Individual Proje
 # Dowloaded Mnist dataset into train and test datasets(ratio 6:1 respectively) and have separate arrays for features and their corresponding labels
 
 treeLabels = 0 , 1
-maxTreeDepth = 1
+maxTreeDepth = 3
 
 class TreeLabelWrapper:
     def __init__(self, labels):
@@ -75,7 +75,7 @@ class DecisionTree:
     def treeFactory(self, X_train, y_train, path):
         if len(path) >= maxTreeDepth:
             return
-        featNum, featThr, labelIndices, errorRate = featureSelector(X_train, y_train, path)
+        featNum, featThr, labelIndices, errorRate = self.featureSelector(X_train, y_train, path)
         self.featureNmbr, self.featureThreshold = featNum, featThr
         self.right = DecisionTree(None, None, treeLabels[labelIndices[0]])
         self.left = DecisionTree(None, None, treeLabels[labelIndices[1]])
@@ -140,7 +140,7 @@ class DecisionTree:
         # for featNbr in range(X_train.shape[1]):
         for featNbr in range(120, 140): # DEBUG, HARDCODE
             if path and featNbr != path[-1][0] or not path:
-                curFeature = featureThresholdSelectorV2(X_train, y_train, featNbr, path)
+                curFeature = self.featureThresholdSelectorV2(X_train, y_train, featNbr, path)
                 if curFeature[2] < leastErrorRate:
                         leastErrorRateFeatureIndex = featNbr
                         leastErrorRateFeatureThreshold = curFeature[0]
@@ -172,36 +172,23 @@ def featureThresholdSelector(X_train, y_train, desiredLabel, comparisonLabel, fe
     return featureThreshold, labels , errorRate
 
 
-# In[18]:
+# In[27]:
 
 
 test = DecisionTree()
-test.featureThresholdSelectorV2(X_trainMnist, y_trainMnist, 128, None)
+test.treeFactory(X_trainMnist, y_trainMnist, [])
 
 
-# In[24]:
+# In[ ]:
 
 
-print(y_trainMnist[1], y_trainMnist[5])
-featureOfSampleSelector(X_trainMnist, y_trainMnist, 136, y_trainMnist[1], y_trainMnist[5])
+test
 
 
-# In[5]:
+# In[25]:
 
 
-X_trainMnist.shape
-
-
-# In[12]:
-
-
-print(np.amax(X_trainMnist[1]))
-print(np.amin(X_trainMnist[1]))
-print()
-print(np.amax(X_trainUsps[1]))
-print(np.amin(X_trainUsps[1]))
-
-# PERHAPS TURN NP.ZEROS TO A DICTIONARY SO I DO NOT HAVE TO DO WEIRD NORMALISATIONS 
+test.predLabel
 
 
 # In[ ]:
