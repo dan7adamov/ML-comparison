@@ -1,2 +1,0 @@
-import operator as op
-
