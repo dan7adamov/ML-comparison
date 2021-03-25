@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[26]:
+# In[3]:
 
 
 import numpy as np
@@ -52,26 +52,6 @@ class DecisionTree:
         self.right = None
         self.left = None
         
-#     def addRight(self, featNumb, featThresh):
-#         self.right = DecisionTree(self.labels, path + [(self.featNumb, self.featThresh, labels)])
-    
-#     def addLeft(self, featNumb, featThresh):
-#         self.left = DecisionTree(self.labels, path + [(self.featNumb, self.featThresh, (labels[1], labels[0]) )])
-    
-#     def add(self, curFeatureNumber, curFeatureThreshold, curLabels):
-#         if curFeatureThreshold >= self.featureThreshold:
-#             if self.right is None:
-#                 self.right = Tree(curFeatureNmbr,curFeatureThreshold, curLabels)
-#                 return
-#             self.right.add(curFeatureNmbr,curFeatureThreshold, curLabels)
-#             return
-#         if curFeatureThreshold < featureThreshold:
-#             if self.left is None:
-#                 self.left = Tree(curFeatureNmbr,curFeatureThreshold, curLabels)
-#                 return
-#             self.left.add(curFeatureNmbr,curFeatureThreshold, curLabels)
-#             return
-        
     def treeFactory(self, X_train, y_train, path):
         if len(path) >= maxTreeDepth:
             return
@@ -117,8 +97,8 @@ class DecisionTree:
             elif y_train[i] == treeLabels[1]:
                 instancesOfFeatureNotLabel[X_train[i,featureNmbr]] += 1
 
-            cumSumFeature = np.cumsum(instancesOfFeatureLabel[::-1])[::-1]
-            cumSumNotFeature = np.cumsum(instancesOfFeatureNotLabel[::-1])[::-1]
+        cumSumFeature = np.cumsum(instancesOfFeatureLabel[::-1])[::-1]
+        cumSumNotFeature = np.cumsum(instancesOfFeatureNotLabel[::-1])[::-1]
 
         np.subtract(cumSumFeature, cumSumNotFeature, cumulativeThreshold)
         featureThreshold = np.argmax(abs(cumulativeThreshold))
@@ -149,30 +129,7 @@ class DecisionTree:
         return leastErrorRateFeatureIndex, leastErrorRateFeatureThreshold, curFeatureLabelIndices, leastErrorRate
 
 
-def featureThresholdSelector(X_train, y_train, desiredLabel, comparisonLabel, featureNmbr):
-    instancesOfFeatureLabel = np.zeros(256) # change 256 so it selects the range of the features in the set
-    instancesOfFeatureNotLabel = np.zeros(256)
-    cumulativeThreshold = np.zeros(256)
-    for i in range(X_train.shape[0]):
-        if y_train[i] == desiredLabel:
-            instancesOfFeatureLabel[X_train[i,featureNmbr]] += 1
-        elif y_train[i] == comparisonLabel:
-            instancesOfFeatureNotLabel[X_train[i,featureNmbr]] += 1
-        cumSumFeature = np.cumsum(instancesOfFeatureLabel[::-1])[::-1]
-        cumSumNotFeature = np.cumsum(instancesOfFeatureNotLabel[::-1])[::-1]
-    np.subtract(cumSumFeature, cumSumNotFeature, cumulativeThreshold)
-    featureThreshold = np.argmax(abs(cumulativeThreshold))
-    if cumulativeThreshold[featureThreshold] >= 0:
-        labels = desiredLabel, comparisonLabel
-        errorRate = 1 - cumSumFeature[featureThreshold] / cumSumFeature[0]
-    else:
-        labels = comparisonLabel, desiredLabel
-        errorRate = 1 - cumSumNotFeature[featureThreshold] / cumSumNotFeature[0]
-    # print(cumulativeThreshold)
-    return featureThreshold, labels , errorRate
-
-
-# In[27]:
+# In[4]:
 
 
 test = DecisionTree()
