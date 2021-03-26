@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[7]:
+# In[26]:
 
 
 import numpy as np
@@ -105,7 +105,7 @@ class DecisionTree:
 
         if cumulativeThreshold[featureThreshold] >= 0:
             indicesOfTreeLabel = 0, 1
-            errorRate = 1 - cumSumFeature[featureThreshold] / cumSumFeature[0] #fix error with division by zero
+            errorRate = 1 - cumSumFeature[featureThreshold] / cumSumFeature[0]
         else:
             indicesOfTreeLabel = 1, 0
             errorRate = 1 - cumSumNotFeature[featureThreshold] / cumSumNotFeature[0]
@@ -118,41 +118,53 @@ class DecisionTree:
         leastErrorRate = 1.0000000001
         leastErrorRateFeatureThreshold = None
         curFeatureLabelIndices = None
-        # for featNbr in range(X_train.shape[1]):
-        for featNbr in range(120, 140): # DEBUG, HARDCODE
+        
+        for featNbr in range(X_train.shape[1]):
+        # for featNbr in range(120, 140): # DEBUG, HARDCODE
             if path and featNbr != path[-1][0] or not path:
                 curFeature = self.featureThresholdSelectorV2(X_train, y_train, featNbr, path)
                 if curFeature[2] < leastErrorRate:
                         leastErrorRateFeatureIndex = featNbr
                         leastErrorRateFeatureThreshold = curFeature[0]
-                        leastErrorRate = curFeature[2]
                         curFeatureLabelIndices = curFeature[1]
+                        leastErrorRate = curFeature[2]
+        
         return leastErrorRateFeatureIndex, leastErrorRateFeatureThreshold, curFeatureLabelIndices, leastErrorRate
 
 
-# In[8]:
+# In[24]:
 
 
 test = DecisionTree()
 test.treeFactory(X_trainMnist, y_trainMnist, [])
 
 
-# Handle end case, in maxDepth tree node only has a label. Defined by parent label after the parent label split. This should be an indication that this is an end node and we dont need 
+# curFeatureLabelIndices returned by feature selector has an error arate of 100% and no new value is assigned
 
-# In[ ]:
-
-
-test
+# In[27]:
 
 
-# In[25]:
+test = DecisionTree()
 
 
-test.predLabel
+# In[28]:
 
 
-# In[ ]:
+test.featureThresholdSelectorV2(X_trainMnist, y_trainMnist, 208, None)
 
 
+# In[29]:
 
 
+testInstOfFeatureLab = [10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5]
+testCumSumFeature = np.cumsum(testInstOfFeatureLab[::-1])[::-1]
+print(testCumSumFeature)
+
+
+# In[30]:
+
+
+test.featureSelector(X_trainMnist, y_trainMnist, None)
+
+
+# So the error is with the error rates. When featThreshold of 0 is selelcted. That makes both arrays select all samples at zero and it somehow has a zero percent error rate
