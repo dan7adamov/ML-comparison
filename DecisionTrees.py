@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[26]:
+# In[53]:
 
 
 import numpy as np
@@ -76,7 +76,10 @@ class DecisionTree:
                 return #correct label
 
     def featureThresholdSelectorV2(self, X_train, y_train, featureNmbr, path):
-
+        
+        indicesOfTreeLabel = 0, 1
+        errorRate = 1
+        
         instancesOfFeatureLabel = np.zeros(256)
         instancesOfFeatureNotLabel = np.zeros(256)
         cumulativeThreshold = np.zeros(256)
@@ -99,16 +102,20 @@ class DecisionTree:
 
         cumSumFeature = np.cumsum(instancesOfFeatureLabel[::-1])[::-1]
         cumSumNotFeature = np.cumsum(instancesOfFeatureNotLabel[::-1])[::-1]
+        
+        if cumSumFeature[0] == 0 and cumSumNotFeature[0] == 0:
+            return None, None, 1
 
         np.subtract(cumSumFeature, cumSumNotFeature, cumulativeThreshold)
         featureThreshold = np.argmax(abs(cumulativeThreshold))
-
-        if cumulativeThreshold[featureThreshold] >= 0:
-            indicesOfTreeLabel = 0, 1
-            errorRate = 1 - cumSumFeature[featureThreshold] / cumSumFeature[0]
-        else:
-            indicesOfTreeLabel = 1, 0
-            errorRate = 1 - cumSumNotFeature[featureThreshold] / cumSumNotFeature[0]
+        
+        if featureThreshold != 0:
+            if cumulativeThreshold[featureThreshold] >= 0:
+                indicesOfTreeLabel = 0, 1
+                errorRate = 1 - cumSumFeature[featureThreshold] / cumSumFeature[0]
+            else:
+                indicesOfTreeLabel = 1, 0
+                errorRate = 1 - cumSumNotFeature[featureThreshold] / cumSumNotFeature[0]
 
         return featureThreshold, indicesOfTreeLabel, errorRate
     
@@ -119,8 +126,8 @@ class DecisionTree:
         leastErrorRateFeatureThreshold = None
         curFeatureLabelIndices = None
         
-        for featNbr in range(X_train.shape[1]):
-        # for featNbr in range(120, 140): # DEBUG, HARDCODE
+        # for featNbr in range(X_train.shape[1]):
+        for featNbr in (0, 1, 128, 135, 255, 280, 300): # DEBUG, HARDCODE
             if path and featNbr != path[-1][0] or not path:
                 curFeature = self.featureThresholdSelectorV2(X_train, y_train, featNbr, path)
                 if curFeature[2] < leastErrorRate:
@@ -132,7 +139,7 @@ class DecisionTree:
         return leastErrorRateFeatureIndex, leastErrorRateFeatureThreshold, curFeatureLabelIndices, leastErrorRate
 
 
-# In[24]:
+# In[ ]:
 
 
 test = DecisionTree()
@@ -141,27 +148,33 @@ test.treeFactory(X_trainMnist, y_trainMnist, [])
 
 # curFeatureLabelIndices returned by feature selector has an error arate of 100% and no new value is assigned
 
-# In[27]:
+# In[54]:
 
 
 test = DecisionTree()
 
 
-# In[28]:
+# In[47]:
 
 
 test.featureThresholdSelectorV2(X_trainMnist, y_trainMnist, 208, None)
 
 
-# In[29]:
+# In[48]:
 
 
-testInstOfFeatureLab = [10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5]
-testCumSumFeature = np.cumsum(testInstOfFeatureLab[::-1])[::-1]
+testInstOfFeatureLab2 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 19, 47, 20, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+testInstOfFeatureLab1 = [0, 0, 0, 0, 0, 0, 14, 19, 47, 20, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+testCumSumFeature1 = np.cumsum(testInstOfFeatureLab1[::-1])[::-1]
+print(testCumSumFeature1)
+testCumSumFeature2 = np.cumsum(testInstOfFeatureLab2[::-1])[::-1]
+np.subtract(testCumSumFeature1, testCumSumFeature2, testCumSumFeature)
+# featureThreshold = np.argmax(abs(cumulativeThreshold))
 print(testCumSumFeature)
+print(np.argmax(abs(testCumSumFeature)))
 
 
-# In[30]:
+# In[55]:
 
 
 test.featureSelector(X_trainMnist, y_trainMnist, None)
