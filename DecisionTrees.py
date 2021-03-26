@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[3]:
+# In[7]:
 
 
 import numpy as np
@@ -105,7 +105,7 @@ class DecisionTree:
 
         if cumulativeThreshold[featureThreshold] >= 0:
             indicesOfTreeLabel = 0, 1
-            errorRate = 1 - cumSumFeature[featureThreshold] / cumSumFeature[0]
+            errorRate = 1 - cumSumFeature[featureThreshold] / cumSumFeature[0] #fix error with division by zero
         else:
             indicesOfTreeLabel = 1, 0
             errorRate = 1 - cumSumNotFeature[featureThreshold] / cumSumNotFeature[0]
@@ -115,7 +115,8 @@ class DecisionTree:
     
     def featureSelector(self, X_train, y_train, path):
         leastErrorRateFeatureIndex = 0
-        leastErrorRate = 1.0
+        leastErrorRate = 1.0000000001
+        leastErrorRateFeatureThreshold = None
         curFeatureLabelIndices = None
         # for featNbr in range(X_train.shape[1]):
         for featNbr in range(120, 140): # DEBUG, HARDCODE
@@ -129,12 +130,14 @@ class DecisionTree:
         return leastErrorRateFeatureIndex, leastErrorRateFeatureThreshold, curFeatureLabelIndices, leastErrorRate
 
 
-# In[4]:
+# In[8]:
 
 
 test = DecisionTree()
 test.treeFactory(X_trainMnist, y_trainMnist, [])
 
+
+# Handle end case, in maxDepth tree node only has a label. Defined by parent label after the parent label split. This should be an indication that this is an end node and we dont need 
 
 # In[ ]:
 
