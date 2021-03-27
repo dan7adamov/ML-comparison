@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[26]:
 
 
 import numpy as np
@@ -36,7 +36,7 @@ with gzip.open('C:\\Users\\Dan Adamov\\Desktop\\RHUL\\3rd Year\\Individual Proje
 # Dowloaded Mnist dataset into train and test datasets(ratio 6:1 respectively) and have separate arrays for features and their corresponding labels
 
 treeLabels = 0 , 1
-maxTreeDepth = 3
+maxTreeDepth = 5
 
 class TreeLabelWrapper:
     def __init__(self, labels):
@@ -62,18 +62,23 @@ class DecisionTree:
         self.right.treeFactory(X_train, y_train, path + [(featNum, featThr, op.__ge__)])
         self.left.treeFactory(X_train, y_train, path + [(featNum, featThr, op.__lt__)])
     
-    def classifier(sample):
-        curNode = self
-        if curNode.right and curNode.left:
-            if sample[self.featureOfSample]>= self.featureThreshold:
-                curNode = self.right
-            if sample[self.featureOfSample]< self.featureThreshold:
-                curNode = self.left
+    def classifier(self, sample):
+        
+        if self.featureThreshold != 0 and sample[self.featureNmbr] >= self.featureThreshold:
+            if self.right:
+                return self.right.classifier(sample)
+            else:
+                return self.predLabel
         else:
-            if sample[self.featureOfSample]>= self.featureThreshold:
-                return #correect label
-            if sample[self.featureOfSample]< self.featureThreshold:
-                return #correct label
+            return self.predLabel
+            
+        if self.featureThreshold and sample[self.featureNmbr] < self.featureThreshold:
+            if self.left:
+                return self.left.classifier(sample)
+            else:
+                return self.predLabel
+        else:
+            return self.predLabel
 
     def featureThresholdSelectorV2(self, X_train, y_train, featureNmbr, path):
         
@@ -104,7 +109,7 @@ class DecisionTree:
         cumSumNotFeature = np.cumsum(instancesOfFeatureNotLabel[::-1])[::-1]
         
         if cumSumFeature[0] == 0 and cumSumNotFeature[0] == 0:
-            return None, None, 1
+            return 0, (0, 1), 1.1
 
         np.subtract(cumSumFeature, cumSumNotFeature, cumulativeThreshold)
         featureThreshold = np.argmax(abs(cumulativeThreshold))
@@ -122,9 +127,9 @@ class DecisionTree:
     
     def featureSelector(self, X_train, y_train, path):
         leastErrorRateFeatureIndex = 0
-        leastErrorRate = 1.0000000001
-        leastErrorRateFeatureThreshold = None
-        curFeatureLabelIndices = None
+        leastErrorRate = 1
+        leastErrorRateFeatureThreshold = 0
+        curFeatureLabelIndices = 0, 1
         
         # for featNbr in range(X_train.shape[1]):
         for featNbr in (0, 1, 128, 135, 255, 280, 300): # DEBUG, HARDCODE
@@ -135,23 +140,34 @@ class DecisionTree:
                         leastErrorRateFeatureThreshold = curFeature[0]
                         curFeatureLabelIndices = curFeature[1]
                         leastErrorRate = curFeature[2]
-        
+        if curFeatureLabelIndices is None:
+            print("Fix this bug")
         return leastErrorRateFeatureIndex, leastErrorRateFeatureThreshold, curFeatureLabelIndices, leastErrorRate
 
+    
+    def audit(self, sample):
+        print(self.featureNmbr, self.featureThreshold, self.predLabel)
+        if self.featureThreshold and sample[self.featureNmbr] >= self.featureThreshold:
+            if self.right:
+                return self.right.audit(sample)
+        if self.featureThreshold and sample[self.featureNmbr] < self.featureThreshold:
+            if self.left:
+                return self.left.audit(sample)
+                   
+        
 
-# In[2]:
+
+# In[ ]:
 
 
 test = DecisionTree()
 test.treeFactory(X_trainMnist, y_trainMnist, [])
 
 
-# curFeatureLabelIndices returned by feature selector has an error arate of 100% and no new value is assigned
-
-# In[54]:
+# In[ ]:
 
 
-test = DecisionTree()
+print(test.audit(X_testMnist[3]))
 
 
 # In[47]:
@@ -180,4 +196,4 @@ print(np.argmax(abs(testCumSumFeature)))
 test.featureSelector(X_trainMnist, y_trainMnist, None)
 
 
-# So the error is with the error rates. When featThreshold of 0 is selelcted. That makes both arrays select all samples at zero and it somehow has a zero percent error rate
+# So the error is with the error rates. When featThreshold of 0 is selelcted. That makes both arrays select all samples at 0 threshold thus it has 0.00 error rate. Making method work incorect as no differentiation is made between two sets of different samples.
