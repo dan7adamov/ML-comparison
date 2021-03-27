@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[53]:
+# In[1]:
 
 
 import numpy as np
@@ -139,7 +139,7 @@ class DecisionTree:
         return leastErrorRateFeatureIndex, leastErrorRateFeatureThreshold, curFeatureLabelIndices, leastErrorRate
 
 
-# In[ ]:
+# In[2]:
 
 
 test = DecisionTree()
