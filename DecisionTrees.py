@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[26]:
+# In[30]:
 
 
 import numpy as np
@@ -49,6 +49,7 @@ class DecisionTree:
         self.featureNmbr = featureNmbr
         self.featureThreshold = featureThreshold
         self.predLabel = predictedLabel
+        self.subSetVolume = None
         self.right = None
         self.left = None
         
@@ -85,6 +86,8 @@ class DecisionTree:
         indicesOfTreeLabel = 0, 1
         errorRate = 1
         
+        self.subSetVolume = 0
+        
         instancesOfFeatureLabel = np.zeros(256)
         instancesOfFeatureNotLabel = np.zeros(256)
         cumulativeThreshold = np.zeros(256)
@@ -102,8 +105,10 @@ class DecisionTree:
             # Processing only good samples
             if y_train[i] == treeLabels[0]:
                 instancesOfFeatureLabel[X_train[i,featureNmbr]] += 1
+                self.subSetVolume += 1
             elif y_train[i] == treeLabels[1]:
                 instancesOfFeatureNotLabel[X_train[i,featureNmbr]] += 1
+                self.subSetVolume += 1
 
         cumSumFeature = np.cumsum(instancesOfFeatureLabel[::-1])[::-1]
         cumSumNotFeature = np.cumsum(instancesOfFeatureNotLabel[::-1])[::-1]
@@ -132,7 +137,7 @@ class DecisionTree:
         curFeatureLabelIndices = 0, 1
         
         # for featNbr in range(X_train.shape[1]):
-        for featNbr in (0, 1, 128, 135, 255, 280, 300): # DEBUG, HARDCODE
+        for featNbr in (300, 320, 340, 360, 380, 420, 440, 460): # DEBUG, HARDCODE
             if path and featNbr != path[-1][0] or not path:
                 curFeature = self.featureThresholdSelectorV2(X_train, y_train, featNbr, path)
                 if curFeature[2] < leastErrorRate:
@@ -154,23 +159,32 @@ class DecisionTree:
             if self.left:
                 return self.left.audit(sample)
                    
+    
+    def auditFull(self, depth = 0):
+        print("depth =", depth)
+        if self.subSetVolume:
+            print("volume =", self.subSetVolume)
+        print(self.featureNmbr, self.featureThreshold, self.predLabel)
+        for subTree in (self.left, self.right):
+            if subTree:
+                subTree.auditFull(depth + 1)
         
 
 
-# In[ ]:
+# In[31]:
 
 
 test = DecisionTree()
 test.treeFactory(X_trainMnist, y_trainMnist, [])
 
 
-# In[ ]:
+# In[32]:
 
 
-print(test.audit(X_testMnist[3]))
+test.auditFull()
 
 
-# In[47]:
+# In[5]:
 
 
 test.featureThresholdSelectorV2(X_trainMnist, y_trainMnist, 208, None)
@@ -194,6 +208,13 @@ print(np.argmax(abs(testCumSumFeature)))
 
 
 test.featureSelector(X_trainMnist, y_trainMnist, None)
+
+
+# In[12]:
+
+
+test.left.predLabe
+test.right.predLabel
 
 
 # So the error is with the error rates. When featThreshold of 0 is selelcted. That makes both arrays select all samples at 0 threshold thus it has 0.00 error rate. Making method work incorect as no differentiation is made between two sets of different samples.
