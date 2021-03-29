@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[30]:
+# In[26]:
 
 
 import numpy as np
@@ -36,7 +36,7 @@ with gzip.open('C:\\Users\\Dan Adamov\\Desktop\\RHUL\\3rd Year\\Individual Proje
 # Dowloaded Mnist dataset into train and test datasets(ratio 6:1 respectively) and have separate arrays for features and their corresponding labels
 
 treeLabels = 0 , 1
-maxTreeDepth = 5
+maxTreeDepth = 2
 
 class TreeLabelWrapper:
     def __init__(self, labels):
@@ -82,6 +82,7 @@ class DecisionTree:
             return self.predLabel
 
     def featureThresholdSelectorV2(self, X_train, y_train, featureNmbr, path):
+        # print(path)
         
         indicesOfTreeLabel = 0, 1
         errorRate = 1
@@ -109,9 +110,11 @@ class DecisionTree:
             elif y_train[i] == treeLabels[1]:
                 instancesOfFeatureNotLabel[X_train[i,featureNmbr]] += 1
                 self.subSetVolume += 1
-
+        # print(self.subSetVolume)
         cumSumFeature = np.cumsum(instancesOfFeatureLabel[::-1])[::-1]
         cumSumNotFeature = np.cumsum(instancesOfFeatureNotLabel[::-1])[::-1]
+        
+        # print(cumSumFeature, cumSumNotFeature)
         
         if cumSumFeature[0] == 0 and cumSumNotFeature[0] == 0:
             return 0, (0, 1), 1.1
@@ -136,10 +139,11 @@ class DecisionTree:
         leastErrorRateFeatureThreshold = 0
         curFeatureLabelIndices = 0, 1
         
-        # for featNbr in range(X_train.shape[1]):
-        for featNbr in (300, 320, 340, 360, 380, 420, 440, 460): # DEBUG, HARDCODE
+        for featNbr in range(X_train.shape[1]):
+        # for featNbr in (300, 305, 310, 315, 320, 325, 330, 335, 340): # DEBUG, HARDCODE
             if path and featNbr != path[-1][0] or not path:
                 curFeature = self.featureThresholdSelectorV2(X_train, y_train, featNbr, path)
+                print(curFeature)
                 if curFeature[2] < leastErrorRate:
                         leastErrorRateFeatureIndex = featNbr
                         leastErrorRateFeatureThreshold = curFeature[0]
@@ -171,14 +175,14 @@ class DecisionTree:
         
 
 
-# In[31]:
+# In[27]:
 
 
 test = DecisionTree()
 test.treeFactory(X_trainMnist, y_trainMnist, [])
 
 
-# In[32]:
+# In[28]:
 
 
 test.auditFull()
@@ -218,3 +222,9 @@ test.right.predLabel
 
 
 # So the error is with the error rates. When featThreshold of 0 is selelcted. That makes both arrays select all samples at 0 threshold thus it has 0.00 error rate. Making method work incorect as no differentiation is made between two sets of different samples.
+
+# In[ ]:
+
+
+
+
