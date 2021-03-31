@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[26]:
+# In[4]:
 
 
 import numpy as np
@@ -35,14 +35,28 @@ with gzip.open('C:\\Users\\Dan Adamov\\Desktop\\RHUL\\3rd Year\\Individual Proje
     y_testMnist = np.frombuffer(testLabelBuffer, dtype = np.uint8, offset = 8)
 # Dowloaded Mnist dataset into train and test datasets(ratio 6:1 respectively) and have separate arrays for features and their corresponding labels
 
-treeLabels = 0 , 1
+treeLabels = None # 0, 1 tuple for labels
 maxTreeDepth = 2
+allTrees = []
+
+def treesGenerator():
+    for i in range(10):
+        for j in range(i + 1, 10):
+            allTrees.append(TreeLabelWrapper(i, j))
+            
+def classifyAllTrees(X_train, y_train):
+    for t in allTrees:
+        t.treeFactory(X_train, y_train, [])
 
 class TreeLabelWrapper:
     def __init__(self, labels):
         self.labels = labels
-        treeLabels = labels
+        # treeLabels = labels
         self.tree = DecisionTree()
+        
+    def treeFactory(self, X_train, y_train):
+        treeLabels = self.labels
+        self.tree.treeFactory(X_train, y_train, [])
 
 class DecisionTree:
     def __init__(self, featureNmbr = None, featureThreshold = None, predictedLabel = None):
@@ -175,11 +189,24 @@ class DecisionTree:
         
 
 
-# In[27]:
+# In[5]:
 
 
 test = DecisionTree()
 test.treeFactory(X_trainMnist, y_trainMnist, [])
+
+
+# In[6]:
+
+
+treesGenerator()
+
+
+# In[ ]:
+
+
+testWrapper = TreeLabelWrapper(0, 1)
+testWrapper.tree.treeFactory(X_trainMnist, y_trainMnist, [])
 
 
 # In[28]:
