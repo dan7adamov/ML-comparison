@@ -71,6 +71,7 @@ class DecisionTree:
         if len(path) >= maxTreeDepth:
             return
         featNum, featThr, labelIndices, errorRate = self.featureSelector(X_train, y_train, path)
+        # if
         self.featureNmbr, self.featureThreshold = featNum, featThr
         self.right = DecisionTree(None, None, treeLabels[labelIndices[0]])
         self.left = DecisionTree(None, None, treeLabels[labelIndices[1]])
@@ -130,6 +131,10 @@ class DecisionTree:
         
         # print(cumSumFeature, cumSumNotFeature)
         
+        if cumSumFeature[0] == 0:
+            return -1, (0, 1), 1.1
+        if cumSumNotFeature[0] == 0:
+            return -2, (0, 1), 1.1
         if cumSumFeature[0] == 0 and cumSumNotFeature[0] == 0:
             return 0, (0, 1), 1.1
 
@@ -157,7 +162,9 @@ class DecisionTree:
         # for featNbr in (300, 305, 310, 315, 320, 325, 330, 335, 340): # DEBUG, HARDCODE
             if path and featNbr != path[-1][0] or not path:
                 curFeature = self.featureThresholdSelectorV2(X_train, y_train, featNbr, path)
-                print(curFeature)
+                if curFeature[0] <= 0:
+                    return None, curFeature[0], None, None # TODO handle the exception
+                # print(curFeature)
                 if curFeature[2] < leastErrorRate:
                         leastErrorRateFeatureIndex = featNbr
                         leastErrorRateFeatureThreshold = curFeature[0]
