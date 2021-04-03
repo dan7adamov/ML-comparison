@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[4]:
+# In[10]:
 
 
 import numpy as np
@@ -9,33 +9,33 @@ import operator as op
 import gzip
 from sklearn.model_selection import train_test_split as tts
 
-uspsTrain = np.genfromtxt('C:\\Users\\Dan Adamov\\Desktop\\RHUL\\3rd Year\\CS3920\\zip.train\\zip.train', delimiter = " ", autostrip = True)
-uspsTest = np.genfromtxt('C:\\Users\\Dan Adamov\\Desktop\\RHUL\\3rd Year\\CS3920\\zip.test\\zip.test', delimiter = " ", autostrip = True)
-usps = np.concatenate((uspsTrain, uspsTest))
-X_trainUsps, X_testUsps, y_trainUsps, y_testUsps = tts(usps[:,1:], usps[:, 0], test_size=0.125, random_state=709)
+# uspsTrain = np.genfromtxt('C:\\Users\\Dan Adamov\\Desktop\\RHUL\\3rd Year\\CS3920\\zip.train\\zip.train', delimiter = " ", autostrip = True)
+# uspsTest = np.genfromtxt('C:\\Users\\Dan Adamov\\Desktop\\RHUL\\3rd Year\\CS3920\\zip.test\\zip.test', delimiter = " ", autostrip = True)
+# usps = np.concatenate((uspsTrain, uspsTest))
+# X_trainUsps, X_testUsps, y_trainUsps, y_testUsps = tts(usps[:,1:], usps[:, 0], test_size=0.125, random_state=709)
 # Dowloaded and parsed usps dataset into train and test datasets(ratio 8:1 respectively) and have separate arrays for features and their corresponding labels
 
 X_trainMnist = np.array([])
 y_trainMnist = np.array([])
 X_testMnist = np.array([])
 y_testMnist = np.array([])
-with gzip.open('C:\\Users\\Dan Adamov\\Desktop\\RHUL\\3rd Year\\Individual Project\\train-images-idx3-ubyte.gz', 'rb') as trainSampleFile:
+with gzip.open('C:\\Users\\danad\\Personal Project\\Individual Project\\train-images-idx3-ubyte.gz', 'rb') as trainSampleFile:
     trainSampleBuffer = trainSampleFile.read()
     X_trainMnistUnshaped = np.frombuffer(trainSampleBuffer, dtype = np.uint8, offset = 16)
     X_trainMnist = X_trainMnistUnshaped.reshape(60000, 784)
-with gzip.open('C:\\Users\\Dan Adamov\\Desktop\\RHUL\\3rd Year\\Individual Project\\train-labels-idx1-ubyte.gz', 'rb') as trainLabelFile:
+with gzip.open('C:\\Users\\danad\\Personal Project\\Individual Project\\train-labels-idx1-ubyte.gz', 'rb') as trainLabelFile:
     trainLabelBuffer = trainLabelFile.read()
     y_trainMnist = np.frombuffer(trainLabelBuffer, dtype = np.uint8, offset = 8)
-with gzip.open('C:\\Users\\Dan Adamov\\Desktop\\RHUL\\3rd Year\\Individual Project\\t10k-images-idx3-ubyte.gz', 'rb') as testSampleFile:
+with gzip.open('C:\\Users\\danad\\Personal Project\\Individual Project\\t10k-images-idx3-ubyte.gz', 'rb') as testSampleFile:
     testSampleBuffer = testSampleFile.read()
     X_testMnistUnshaped = np.frombuffer(testSampleBuffer, dtype = np.uint8, offset = 16)
     X_testMnist = X_testMnistUnshaped.reshape(10000, 784)
-with gzip.open('C:\\Users\\Dan Adamov\\Desktop\\RHUL\\3rd Year\\Individual Project\\t10k-labels-idx1-ubyte.gz', 'rb') as testLabelFile:
+with gzip.open('C:\\Users\\danad\\Personal Project\\Individual Project\\t10k-labels-idx1-ubyte.gz', 'rb') as testLabelFile:
     testLabelBuffer = testLabelFile.read()
     y_testMnist = np.frombuffer(testLabelBuffer, dtype = np.uint8, offset = 8)
 # Dowloaded Mnist dataset into train and test datasets(ratio 6:1 respectively) and have separate arrays for features and their corresponding labels
 
-treeLabels = None # 0, 1 tuple for labels
+treeLabels = 0, 1 #None FIX THIS TO NONE AFTER BUG TESTING
 maxTreeDepth = 2
 allTrees = []
 
@@ -71,7 +71,10 @@ class DecisionTree:
         if len(path) >= maxTreeDepth:
             return
         featNum, featThr, labelIndices, errorRate = self.featureSelector(X_train, y_train, path)
-        # if
+        # do not create 'empty' nodes with uninformative divisions, or inadequate number of samples in the subset
+        if featNum != None and featNum <= 0:
+            return
+        
         self.featureNmbr, self.featureThreshold = featNum, featThr
         self.right = DecisionTree(None, None, treeLabels[labelIndices[0]])
         self.left = DecisionTree(None, None, treeLabels[labelIndices[1]])
@@ -196,7 +199,7 @@ class DecisionTree:
         
 
 
-# In[5]:
+# In[11]:
 
 
 test = DecisionTree()
