@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[10]:
+# In[13]:
 
 
 import numpy as np
@@ -72,7 +72,14 @@ class DecisionTree:
             return
         featNum, featThr, labelIndices, errorRate = self.featureSelector(X_train, y_train, path)
         # do not create 'empty' nodes with uninformative divisions, or inadequate number of samples in the subset
-        if featNum != None and featNum <= 0:
+        
+        if featThr == -1: # no samples for right node
+            self.left = DecisionTree(None, None, treeLabels[1]) # check if [1] or [0] or use labelInd
+            return
+        if featThr == -2: # no samples for left node
+            self.right = DecisionTree(None, None, treeLabels[0])
+            return
+        if featNum is None:
             return
         
         self.featureNmbr, self.featureThreshold = featNum, featThr
@@ -134,9 +141,9 @@ class DecisionTree:
         
         # print(cumSumFeature, cumSumNotFeature)
         
-        if cumSumFeature[0] == 0:
+        if cumSumFeature[0] == 0: # no samples for right node creation
             return -1, (0, 1), 1.1
-        if cumSumNotFeature[0] == 0:
+        if cumSumNotFeature[0] == 0: # no samples for left node creation
             return -2, (0, 1), 1.1
         if cumSumFeature[0] == 0 and cumSumNotFeature[0] == 0:
             return 0, (0, 1), 1.1
@@ -199,7 +206,7 @@ class DecisionTree:
         
 
 
-# In[11]:
+# In[14]:
 
 
 test = DecisionTree()
@@ -212,14 +219,14 @@ test.treeFactory(X_trainMnist, y_trainMnist, [])
 treesGenerator()
 
 
-# In[ ]:
+# In[12]:
 
 
 testWrapper = TreeLabelWrapper(0, 1)
 testWrapper.tree.treeFactory(X_trainMnist, y_trainMnist, [])
 
 
-# In[28]:
+# In[15]:
 
 
 test.auditFull()
