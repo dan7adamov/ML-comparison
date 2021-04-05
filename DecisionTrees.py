@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[5]:
+# In[15]:
 
 
 import numpy as np
@@ -36,7 +36,7 @@ with gzip.open('C:\\Users\\danad\\Personal Project\\Individual Project\\t10k-lab
 # Dowloaded Mnist dataset into train and test datasets(ratio 6:1 respectively) and have separate arrays for features and their corresponding labels
 
 treeLabels = 0, 1 #None FIX THIS TO NONE AFTER BUG TESTING
-maxTreeDepth = 2
+maxTreeDepth = 5
 allTrees = []
 
 def treesGenerator():
@@ -172,7 +172,7 @@ class DecisionTree:
         # for featNbr in (300, 305, 310, 315, 320, 325, 330, 335, 340): # DEBUG, HARDCODE
             if path and featNbr != path[-1][0] or not path:
                 curFeature = self.featureThresholdSelectorV2(X_train, y_train, featNbr, path)
-                if curFeature[0] <= 0:
+                if curFeature[0] <= 0 and leastErrorRate == 1:
                     leastErrorRateFeatureIndex = None
                     leastErrorRateFeatureThreshold = curFeature[0]
                     curFeatureLabelIndices = curFeature[1]
@@ -199,6 +199,7 @@ class DecisionTree:
                    
     
     def auditFull(self, depth = 0):
+        print()
         print("depth =", depth)
         if self.subSetVolume:
             print("volume =", self.subSetVolume)
@@ -209,7 +210,7 @@ class DecisionTree:
         
 
 
-# In[6]:
+# In[16]:
 
 
 test = DecisionTree()
@@ -229,7 +230,7 @@ testWrapper = TreeLabelWrapper(0, 1)
 testWrapper.tree.treeFactory(X_trainMnist, y_trainMnist, [])
 
 
-# In[7]:
+# In[17]:
 
 
 test.auditFull()
