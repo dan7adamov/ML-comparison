@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[15]:
+# In[32]:
 
 
 import numpy as np
@@ -35,14 +35,14 @@ with gzip.open('C:\\Users\\danad\\Personal Project\\Individual Project\\t10k-lab
     y_testMnist = np.frombuffer(testLabelBuffer, dtype = np.uint8, offset = 8)
 # Dowloaded Mnist dataset into train and test datasets(ratio 6:1 respectively) and have separate arrays for features and their corresponding labels
 
-treeLabels = 0, 1 #None FIX THIS TO NONE AFTER BUG TESTING
+treeLabels = None # FIX THIS TO NONE AFTER BUG TESTING
 maxTreeDepth = 5
 allTrees = []
 
 def treesGenerator():
     for i in range(10):
         for j in range(i + 1, 10):
-            allTrees.append(TreeLabelWrapper(i, j))
+            allTrees.append(TreeLabelWrapper((i, j)))
             
 def classifyAllTrees(X_train, y_train):
     for t in allTrees:
@@ -51,12 +51,14 @@ def classifyAllTrees(X_train, y_train):
 class TreeLabelWrapper:
     def __init__(self, labels):
         self.labels = labels
-        # treeLabels = labels
+        print("labels =" , self.labels )
         self.tree = DecisionTree()
         
     def treeFactory(self, X_train, y_train):
         treeLabels = self.labels
+        print("TREElabels =" , treeLabels )
         self.tree.treeFactory(X_train, y_train, [])
+        
 
 class DecisionTree:
     def __init__(self, featureNmbr = None, featureThreshold = None, predictedLabel = None):
@@ -141,13 +143,14 @@ class DecisionTree:
         
         # print(cumSumFeature, cumSumNotFeature)
         
+        if cumSumFeature[0] == 0 and cumSumNotFeature[0] == 0: # Extra test, should never happen
+            print("Possible Bug - no samples in subset")
+            return 0, (0, 1), 1.1
         if cumSumFeature[0] == 0: # no samples for right node creation
             return -1, (1, 0), 1.1
         if cumSumNotFeature[0] == 0: # no samples for left node creation
             return -2, (0, 1), 1.1
-        if cumSumFeature[0] == 0 and cumSumNotFeature[0] == 0:
-            return 0, (0, 1), 1.1
-
+        
         np.subtract(cumSumFeature, cumSumNotFeature, cumulativeThreshold)
         featureThreshold = np.argmax(abs(cumulativeThreshold))
         
@@ -176,7 +179,7 @@ class DecisionTree:
                     leastErrorRateFeatureIndex = None
                     leastErrorRateFeatureThreshold = curFeature[0]
                     curFeatureLabelIndices = curFeature[1]
-                    # TODO fix this, should not perform return, it leaves the loop if condition is satisfied.
+                    # No perform return, it leaves the loop if condition is satisfied.
                 # print(curFeature)
                 if curFeature[2] < leastErrorRate:
                         leastErrorRateFeatureIndex = featNbr
@@ -217,17 +220,17 @@ test = DecisionTree()
 test.treeFactory(X_trainMnist, y_trainMnist, [])
 
 
-# In[3]:
+# In[24]:
 
 
 treesGenerator()
 
 
-# In[12]:
+# In[35]:
 
 
-testWrapper = TreeLabelWrapper(0, 1)
-testWrapper.tree.treeFactory(X_trainMnist, y_trainMnist, [])
+testWrapper = TreeLabelWrapper( (0, 1) )
+testWrapper.treeFactory(X_trainMnist, y_trainMnist)
 
 
 # In[17]:
