@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[13]:
+# In[5]:
 
 
 import numpy as np
@@ -74,10 +74,10 @@ class DecisionTree:
         # do not create 'empty' nodes with uninformative divisions, or inadequate number of samples in the subset
         
         if featThr == -1: # no samples for right node
-            self.left = DecisionTree(None, None, treeLabels[1]) # check if [1] or [0] or use labelInd
+            self.left = DecisionTree(None, None, treeLabels[labelIndices[0]]) # treeLabels need to be handled by treeIndices
             return
         if featThr == -2: # no samples for left node
-            self.right = DecisionTree(None, None, treeLabels[0])
+            self.right = DecisionTree(None, None, treeLabels[labelIndices[0]])
             return
         if featNum is None:
             return
@@ -142,7 +142,7 @@ class DecisionTree:
         # print(cumSumFeature, cumSumNotFeature)
         
         if cumSumFeature[0] == 0: # no samples for right node creation
-            return -1, (0, 1), 1.1
+            return -1, (1, 0), 1.1
         if cumSumNotFeature[0] == 0: # no samples for left node creation
             return -2, (0, 1), 1.1
         if cumSumFeature[0] == 0 and cumSumNotFeature[0] == 0:
@@ -173,7 +173,10 @@ class DecisionTree:
             if path and featNbr != path[-1][0] or not path:
                 curFeature = self.featureThresholdSelectorV2(X_train, y_train, featNbr, path)
                 if curFeature[0] <= 0:
-                    return None, curFeature[0], None, None # TODO handle the exception
+                    leastErrorRateFeatureIndex = None
+                    leastErrorRateFeatureThreshold = curFeature[0]
+                    curFeatureLabelIndices = curFeature[1]
+                    # TODO fix this, should not perform return, it leaves the loop if condition is satisfied.
                 # print(curFeature)
                 if curFeature[2] < leastErrorRate:
                         leastErrorRateFeatureIndex = featNbr
@@ -206,14 +209,14 @@ class DecisionTree:
         
 
 
-# In[14]:
+# In[6]:
 
 
 test = DecisionTree()
 test.treeFactory(X_trainMnist, y_trainMnist, [])
 
 
-# In[6]:
+# In[3]:
 
 
 treesGenerator()
@@ -226,7 +229,7 @@ testWrapper = TreeLabelWrapper(0, 1)
 testWrapper.tree.treeFactory(X_trainMnist, y_trainMnist, [])
 
 
-# In[15]:
+# In[7]:
 
 
 test.auditFull()
