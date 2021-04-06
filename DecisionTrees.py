@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[5]:
+# In[2]:
 
 
 import numpy as np
@@ -51,12 +51,13 @@ def classifyAllTrees(X_train, y_train):
 class TreeLabelWrapper:
     def __init__(self, labels):
         self.labels = labels
-        print("labels =" , self.labels )
+        # print("labels =" , self.labels )
         self.tree = DecisionTree()
         
     def treeFactory(self, X_train, y_train):
+        global treeLabels
         treeLabels = self.labels
-        print("TREElabels =" , treeLabels )
+        # print("TREElabels =" , treeLabels )
         self.tree.treeFactory(X_train, y_train, []) #incorrect call??? no treeLabels in this instance of decTree
         
 
@@ -72,7 +73,7 @@ class DecisionTree:
     def treeFactory(self, X_train, y_train, path):
         if len(path) >= maxTreeDepth:
             return
-        print("TREElabels in treeFac =" , treeLabels )
+        # print("TREElabels in treeFac =" , treeLabels )
         featNum, featThr, labelIndices, errorRate = self.featureSelector(X_train, y_train, path)
         # do not create 'empty' nodes with uninformative divisions, or inadequate number of samples in the subset
         
@@ -130,7 +131,7 @@ class DecisionTree:
                         break
                 if not goodSample:
                     continue
-            print(treeLabels)    
+            # print(treeLabels)    
             # Processing only good samples
             if y_train[i] == treeLabels[0]:
                 instancesOfFeatureLabel[X_train[i,featureNmbr]] += 1
@@ -171,7 +172,7 @@ class DecisionTree:
         leastErrorRate = 1
         leastErrorRateFeatureThreshold = 0
         curFeatureLabelIndices = 0, 1
-        print("TREElabels in fSelec =" , treeLabels )
+        # print("TREElabels in fSelec =" , treeLabels )
         for featNbr in range(X_train.shape[1]):
         # for featNbr in (300, 305, 310, 315, 320, 325, 330, 335, 340): # DEBUG, HARDCODE
             if path and featNbr != path[-1][0] or not path:
@@ -211,69 +212,20 @@ class DecisionTree:
         for subTree in (self.left, self.right):
             if subTree:
                 subTree.auditFull(depth + 1)
-        
-
-
-# In[16]:
-
-
-test = DecisionTree()
-test.treeFactory(X_trainMnist, y_trainMnist, [])
-
-
-# In[24]:
-
-
-treesGenerator()
-
-
-# In[6]:
-
-
-testWrapper = TreeLabelWrapper( (0, 1) )
-testWrapper.treeFactory(X_trainMnist, y_trainMnist)
-
-
-# In[17]:
-
-
-test.auditFull()
 
 
 # In[5]:
 
 
-test.featureThresholdSelectorV2(X_trainMnist, y_trainMnist, 208, None)
+testWrapper = TreeLabelWrapper( (7, 2) )
+testWrapper.treeFactory(X_trainMnist[0:100], y_trainMnist[0:100])
 
 
-# In[48]:
+# In[6]:
 
 
-testInstOfFeatureLab2 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 19, 47, 20, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-testInstOfFeatureLab1 = [0, 0, 0, 0, 0, 0, 14, 19, 47, 20, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-testCumSumFeature1 = np.cumsum(testInstOfFeatureLab1[::-1])[::-1]
-print(testCumSumFeature1)
-testCumSumFeature2 = np.cumsum(testInstOfFeatureLab2[::-1])[::-1]
-np.subtract(testCumSumFeature1, testCumSumFeature2, testCumSumFeature)
-# featureThreshold = np.argmax(abs(cumulativeThreshold))
-print(testCumSumFeature)
-print(np.argmax(abs(testCumSumFeature)))
+testWrapper.tree.auditFull()
 
-
-# In[55]:
-
-
-test.featureSelector(X_trainMnist, y_trainMnist, None)
-
-
-# In[12]:
-
-
-test.left.predLabe
-test.right.predLabel
-
-
-# So the error is with the error rates. When featThreshold of 0 is selelcted. That makes both arrays select all samples at 0 threshold thus it has 0.00 error rate. Making method work incorect as no differentiation is made between two sets of different samples.
 
 # In[ ]:
 
