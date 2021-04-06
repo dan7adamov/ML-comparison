@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[32]:
+# In[5]:
 
 
 import numpy as np
@@ -57,7 +57,7 @@ class TreeLabelWrapper:
     def treeFactory(self, X_train, y_train):
         treeLabels = self.labels
         print("TREElabels =" , treeLabels )
-        self.tree.treeFactory(X_train, y_train, [])
+        self.tree.treeFactory(X_train, y_train, []) #incorrect call??? no treeLabels in this instance of decTree
         
 
 class DecisionTree:
@@ -72,6 +72,7 @@ class DecisionTree:
     def treeFactory(self, X_train, y_train, path):
         if len(path) >= maxTreeDepth:
             return
+        print("TREElabels in treeFac =" , treeLabels )
         featNum, featThr, labelIndices, errorRate = self.featureSelector(X_train, y_train, path)
         # do not create 'empty' nodes with uninformative divisions, or inadequate number of samples in the subset
         
@@ -129,7 +130,7 @@ class DecisionTree:
                         break
                 if not goodSample:
                     continue
-                
+            print(treeLabels)    
             # Processing only good samples
             if y_train[i] == treeLabels[0]:
                 instancesOfFeatureLabel[X_train[i,featureNmbr]] += 1
@@ -170,7 +171,7 @@ class DecisionTree:
         leastErrorRate = 1
         leastErrorRateFeatureThreshold = 0
         curFeatureLabelIndices = 0, 1
-        
+        print("TREElabels in fSelec =" , treeLabels )
         for featNbr in range(X_train.shape[1]):
         # for featNbr in (300, 305, 310, 315, 320, 325, 330, 335, 340): # DEBUG, HARDCODE
             if path and featNbr != path[-1][0] or not path:
@@ -226,7 +227,7 @@ test.treeFactory(X_trainMnist, y_trainMnist, [])
 treesGenerator()
 
 
-# In[35]:
+# In[6]:
 
 
 testWrapper = TreeLabelWrapper( (0, 1) )
