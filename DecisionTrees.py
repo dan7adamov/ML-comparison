@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[48]:
+# In[11]:
 
 
 import numpy as np
@@ -76,11 +76,13 @@ class DecisionTree:
         featNum, featThr, labelIndices, errorRate = self.featureSelector(X_train, y_train, path)
         # do not create 'empty' nodes with uninformative divisions, or inadequate number of samples in the subset
         
-        if featThr == -1: # no samples for right node
-            self.left = DecisionTree(None, None, treeLabels[labelIndices[0]]) # treeLabels need to be handled by treeIndices
-            return
-        if featThr == -2: # no samples for left node
-            self.right = DecisionTree(None, None, treeLabels[labelIndices[0]])
+#         if featThr == -1: # no samples for right node
+#             self.left = DecisionTree(None, None, treeLabels[labelIndices[0]]) # treeLabels need to be handled by treeIndices
+#             return
+#         if featThr == -2: # no samples for left node
+#             self.right = DecisionTree(None, None, treeLabels[labelIndices[0]])
+#             return
+        if featThr < 0:            
             return
         if featNum is None:
             return
@@ -109,11 +111,8 @@ class DecisionTree:
 
         
     def classifierV2(self, sample):
-        if not self.featureThreshold:
-            if self.left and not self.right:
-                return self.left.predLabel
-            if self.right and not self.left:
-                return self.right.predLabel
+        if self.featureThreshold is None:
+             return predLabel
         else:
             if self.featureThreshold and sample[self.featureNmbr] >= self.featureThreshold:
                 return self.right.classifier(sample)
@@ -155,9 +154,9 @@ class DecisionTree:
         if cumSumFeature[0] == 0 and cumSumNotFeature[0] == 0: # Extra test, should never happen
             print("Possible Bug - no samples in subset")
             return 0, (0, 1), 1.1
-        if cumSumFeature[0] == 0: # no samples for right node creation
+        if cumSumFeature[0] == 0: # nothing to split, only one type of labels
             return -1, (1, 0), 1.1
-        if cumSumNotFeature[0] == 0: # no samples for left node creation
+        if cumSumNotFeature[0] == 0: # nothing to split, only one type of labels
             return -2, (0, 1), 1.1
         
         np.subtract(cumSumFeature, cumSumNotFeature, cumulativeThreshold)
@@ -217,42 +216,45 @@ class DecisionTree:
                 subTree.auditFull(depth + 1)
 
 
-# In[49]:
+# In[12]:
 
 
 testWrapper = TreeLabelWrapper( (7, 2) )
-testWrapper.treeFactory(X_trainMnist[0:100], y_trainMnist[0:100])
+testWrapper.treeFactory(X_trainMnist[100:200], y_trainMnist[100:200])
 
 
-# In[50]:
+# In[13]:
 
 
 testWrapper.tree.auditFull()
 
 
-# In[53]:
+# In[19]:
 
 
-y_trainMnist[100:120]
+y_trainMnist[200:220]
 
 
-# In[54]:
+# In[17]:
 
 
-print(testWrapper.tree.classifierV2(X_trainMnist[117]))
+testWrapper.tree.classifierV2(X_trainMnist[117])
 
 
-# In[64]:
+# In[22]:
 
 
 from PIL import Image
 import matplotlib.pyplot as plt
 
-
-pred = testWrapper.tree.classifierV2(X_trainMnist[117])
-plt.imshow((X_trainMnist[117,:]).astype(int).reshape(28,28))
-print("prediction:", pred)
-print("label:", y_trainMnist[117])
+# k = 117
+for k in range(100, 250):
+    if y_trainMnist[k] in [2, 7]:
+        pred = testWrapper.tree.classifierV2(X_trainMnist[k])
+        if pred != y_trainMnist[k]:
+            # plt.imshow((X_trainMnist[k,:]).astype(int).reshape(28,28))
+            print("prediction:", pred)
+            print("label:", y_trainMnist[k])
 
 
 # In[ ]:
