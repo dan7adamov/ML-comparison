@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[2]:
+# In[48]:
 
 
 import numpy as np
@@ -48,19 +48,19 @@ def classifyAllTrees(X_train, y_train):
     for t in allTrees:
         t.treeFactory(X_train, y_train, [])
 
+# wrapper class facilitates generation of decision trees with different label tuples
 class TreeLabelWrapper:
     def __init__(self, labels):
         self.labels = labels
-        # print("labels =" , self.labels )
         self.tree = DecisionTree()
         
     def treeFactory(self, X_train, y_train):
         global treeLabels
         treeLabels = self.labels
-        # print("TREElabels =" , treeLabels )
-        self.tree.treeFactory(X_train, y_train, []) #incorrect call??? no treeLabels in this instance of decTree
+        self.tree.treeFactory(X_train, y_train, [])
         
 
+# main algorithm logic class. Creates instances of tree nodes, and hondles all the splitting
 class DecisionTree:
     def __init__(self, featureNmbr = None, featureThreshold = None, predictedLabel = None):
         self.featureNmbr = featureNmbr
@@ -73,7 +73,6 @@ class DecisionTree:
     def treeFactory(self, X_train, y_train, path):
         if len(path) >= maxTreeDepth:
             return
-        # print("TREElabels in treeFac =" , treeLabels )
         featNum, featThr, labelIndices, errorRate = self.featureSelector(X_train, y_train, path)
         # do not create 'empty' nodes with uninformative divisions, or inadequate number of samples in the subset
         
@@ -94,13 +93,11 @@ class DecisionTree:
     
     def classifier(self, sample):
         
-        if self.featureThreshold != 0 and sample[self.featureNmbr] >= self.featureThreshold:
+        if self.featureThreshold and sample[self.featureNmbr] >= self.featureThreshold:
             if self.right:
                 return self.right.classifier(sample)
             else:
                 return self.predLabel
-        else:
-            return self.predLabel
             
         if self.featureThreshold and sample[self.featureNmbr] < self.featureThreshold:
             if self.left:
@@ -110,8 +107,20 @@ class DecisionTree:
         else:
             return self.predLabel
 
+        
+    def classifierV2(self, sample):
+        if not self.featureThreshold:
+            if self.left and not self.right:
+                return self.left.predLabel
+            if self.right and not self.left:
+                return self.right.predLabel
+        else:
+            if self.featureThreshold and sample[self.featureNmbr] >= self.featureThreshold:
+                return self.right.classifier(sample)
+            if self.featureThreshold and sample[self.featureNmbr] < self.featureThreshold:
+                return self.left.classifier(sample)
+        
     def featureThresholdSelectorV2(self, X_train, y_train, featureNmbr, path):
-        # print(path)
         
         indicesOfTreeLabel = 0, 1
         errorRate = 1
@@ -131,7 +140,7 @@ class DecisionTree:
                         break
                 if not goodSample:
                     continue
-            # print(treeLabels)    
+                    
             # Processing only good samples
             if y_train[i] == treeLabels[0]:
                 instancesOfFeatureLabel[X_train[i,featureNmbr]] += 1
@@ -139,11 +148,9 @@ class DecisionTree:
             elif y_train[i] == treeLabels[1]:
                 instancesOfFeatureNotLabel[X_train[i,featureNmbr]] += 1
                 self.subSetVolume += 1
-        # print(self.subSetVolume)
+                
         cumSumFeature = np.cumsum(instancesOfFeatureLabel[::-1])[::-1]
         cumSumNotFeature = np.cumsum(instancesOfFeatureNotLabel[::-1])[::-1]
-        
-        # print(cumSumFeature, cumSumNotFeature)
         
         if cumSumFeature[0] == 0 and cumSumNotFeature[0] == 0: # Extra test, should never happen
             print("Possible Bug - no samples in subset")
@@ -172,7 +179,6 @@ class DecisionTree:
         leastErrorRate = 1
         leastErrorRateFeatureThreshold = 0
         curFeatureLabelIndices = 0, 1
-        # print("TREElabels in fSelec =" , treeLabels )
         for featNbr in range(X_train.shape[1]):
         # for featNbr in (300, 305, 310, 315, 320, 325, 330, 335, 340): # DEBUG, HARDCODE
             if path and featNbr != path[-1][0] or not path:
@@ -182,14 +188,11 @@ class DecisionTree:
                     leastErrorRateFeatureThreshold = curFeature[0]
                     curFeatureLabelIndices = curFeature[1]
                     # No perform return, it leaves the loop if condition is satisfied.
-                # print(curFeature)
                 if curFeature[2] < leastErrorRate:
                         leastErrorRateFeatureIndex = featNbr
                         leastErrorRateFeatureThreshold = curFeature[0]
                         curFeatureLabelIndices = curFeature[1]
                         leastErrorRate = curFeature[2]
-        if curFeatureLabelIndices is None:
-            print("Fix this bug")
         return leastErrorRateFeatureIndex, leastErrorRateFeatureThreshold, curFeatureLabelIndices, leastErrorRate
 
     
@@ -214,17 +217,42 @@ class DecisionTree:
                 subTree.auditFull(depth + 1)
 
 
-# In[5]:
+# In[49]:
 
 
 testWrapper = TreeLabelWrapper( (7, 2) )
 testWrapper.treeFactory(X_trainMnist[0:100], y_trainMnist[0:100])
 
 
-# In[6]:
+# In[50]:
 
 
 testWrapper.tree.auditFull()
+
+
+# In[53]:
+
+
+y_trainMnist[100:120]
+
+
+# In[54]:
+
+
+print(testWrapper.tree.classifierV2(X_trainMnist[117]))
+
+
+# In[64]:
+
+
+from PIL import Image
+import matplotlib.pyplot as plt
+
+
+pred = testWrapper.tree.classifierV2(X_trainMnist[117])
+plt.imshow((X_trainMnist[117,:]).astype(int).reshape(28,28))
+print("prediction:", pred)
+print("label:", y_trainMnist[117])
 
 
 # In[ ]:
