@@ -47,7 +47,13 @@ def treesGenerator():
 def classifyAllTrees(X_train, y_train):
     for t in allTrees:
         t.treeFactory(X_train, y_train, [])
-
+        
+def decisionMaker(sample):
+    predLabels = []
+    for t in allTrees:
+        predLabels.append( t.tree.classifierV2(sample) )
+    return max(set(predLabels), key = predLabels.count)
+        
 # wrapper class facilitates generation of decision trees with different label tuples
 class TreeLabelWrapper:
     def __init__(self, labels):
