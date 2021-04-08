@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[11]:
+# In[8]:
 
 
 import numpy as np
@@ -46,7 +46,7 @@ def treesGenerator():
             
 def classifyAllTrees(X_train, y_train):
     for t in allTrees:
-        t.treeFactory(X_train, y_train, [])
+        t.treeFactory(X_train, y_train)
         
 def decisionMaker(sample):
     predLabels = []
@@ -76,28 +76,25 @@ class DecisionTree:
         self.right = None
         self.left = None
         
+    
     def treeFactory(self, X_train, y_train, path):
         if len(path) >= maxTreeDepth:
             return
         featNum, featThr, labelIndices, errorRate = self.featureSelector(X_train, y_train, path)
-        # do not create 'empty' nodes with uninformative divisions, or inadequate number of samples in the subset
         
-#         if featThr == -1: # no samples for right node
-#             self.left = DecisionTree(None, None, treeLabels[labelIndices[0]]) # treeLabels need to be handled by treeIndices
-#             return
-#         if featThr == -2: # no samples for left node
-#             self.right = DecisionTree(None, None, treeLabels[labelIndices[0]])
-#             return
+        # do not create 'empty' nodes with uninformative divisions, or inadequate number of samples in the subset
         if featThr < 0:            
             return
         if featNum is None:
             return
         
+        # divison is informative so two new nodes are created and their parent node contains the split information
         self.featureNmbr, self.featureThreshold = featNum, featThr
         self.right = DecisionTree(None, None, treeLabels[labelIndices[0]])
         self.left = DecisionTree(None, None, treeLabels[labelIndices[1]])
         self.right.treeFactory(X_train, y_train, path + [(featNum, featThr, op.__ge__)])
         self.left.treeFactory(X_train, y_train, path + [(featNum, featThr, op.__lt__)])
+    
     
     def classifier(self, sample):
         
@@ -119,6 +116,8 @@ class DecisionTree:
     def classifierV2(self, sample):
         if self.featureThreshold is None:
              return predLabel
+        elif self.right is None and self.left is None:
+            return predLabel
         else:
             if self.featureThreshold and sample[self.featureNmbr] >= self.featureThreshold:
                 return self.right.classifier(sample)
@@ -222,14 +221,14 @@ class DecisionTree:
                 subTree.auditFull(depth + 1)
 
 
-# In[12]:
+# In[5]:
 
 
 testWrapper = TreeLabelWrapper( (7, 2) )
 testWrapper.treeFactory(X_trainMnist[100:200], y_trainMnist[100:200])
 
 
-# In[13]:
+# In[6]:
 
 
 testWrapper.tree.auditFull()
@@ -261,6 +260,13 @@ for k in range(100, 250):
             # plt.imshow((X_trainMnist[k,:]).astype(int).reshape(28,28))
             print("prediction:", pred)
             print("label:", y_trainMnist[k])
+
+
+# In[9]:
+
+
+treesGenerator()
+classifyAllTrees(X_trainMnist, y_trainMnist)
 
 
 # In[ ]:
