@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[5]:
+# In[18]:
 
 
 import numpy as np
@@ -38,11 +38,11 @@ with gzip.open('C:\\Users\\danad\\Personal Project\\Individual Project\\t10k-lab
 # global variables
 treeLabels = None # FIX THIS TO NONE AFTER BUG TESTING
 maxTreeDepth = 5
-allTrees = []
 
 
 # generates all possible tuples with different label combinations and makes an empty tree with it
 def treesGenerator():
+    allTrees = []
     for i in range(10):
         for j in range(i + 1, 10):
             allTrees.append(TreeLabelWrapper((i, j)))
@@ -206,9 +206,9 @@ class DecisionTree:
         # end of recursion, returns the correct label for a given sample
         else:
             if sample[self.featureNmbr] >= self.featureThreshold:
-                return self.right.classifier(sample)
+                return self.right.classifierV2(sample)
             if sample[self.featureNmbr] < self.featureThreshold:
-                return self.left.classifier(sample)       
+                return self.left.classifierV2(sample)       
     
     
     # debug function - prints all the tree information from its nodes
@@ -223,11 +223,14 @@ class DecisionTree:
                 subTree.auditFull(depth + 1)
 
 
-# In[22]:
+# In[19]:
 
 
 from PIL import Image
 import matplotlib.pyplot as plt
+
+testWrapper = TreeLabelWrapper( (2, 7) )
+testWrapper.treeFactory(X_trainMnist[:10000], y_trainMnist[:10000])
 
 # k = 117
 for k in range(100, 250):
@@ -239,14 +242,14 @@ for k in range(100, 250):
             print("label:", y_trainMnist[k])
 
 
-# In[6]:
+# In[15]:
 
 
 treesGenerator()
 classifyAllTrees(X_trainMnist[:300], y_trainMnist[:300])
 
 
-# In[7]:
+# In[17]:
 
 
 correctPred = 0
