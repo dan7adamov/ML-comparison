@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[8]:
+# In[5]:
 
 
 import numpy as np
@@ -35,25 +35,32 @@ with gzip.open('C:\\Users\\danad\\Personal Project\\Individual Project\\t10k-lab
     y_testMnist = np.frombuffer(testLabelBuffer, dtype = np.uint8, offset = 8)
 # Dowloaded Mnist dataset into train and test datasets(ratio 6:1 respectively) and have separate arrays for features and their corresponding labels
 
+# global variables
 treeLabels = None # FIX THIS TO NONE AFTER BUG TESTING
 maxTreeDepth = 5
 allTrees = []
 
+
+# generates all possible tuples with different label combinations and makes an empty tree with it
 def treesGenerator():
     for i in range(10):
         for j in range(i + 1, 10):
             allTrees.append(TreeLabelWrapper((i, j)))
-            
+
+# starts classifing samples and making divisions to form a complete DecisionTree
 def classifyAllTrees(X_train, y_train):
     for t in allTrees:
         t.treeFactory(X_train, y_train)
-        
+        print("Tree is split", t.labels)
+
+# returns the predicted label for a given sample, by looking at which label is most common from all possible Trees combinations
 def decisionMaker(sample):
     predLabels = []
     for t in allTrees:
         predLabels.append( t.tree.classifierV2(sample) )
     return max(set(predLabels), key = predLabels.count)
-        
+    
+    
 # wrapper class facilitates generation of decision trees with different label tuples
 class TreeLabelWrapper:
     def __init__(self, labels):
@@ -72,11 +79,11 @@ class DecisionTree:
         self.featureNmbr = featureNmbr
         self.featureThreshold = featureThreshold
         self.predLabel = predictedLabel
-        self.subSetVolume = None
         self.right = None
         self.left = None
+        self.subSetVolume = None # debug variable - number of samples in the current node
         
-    
+    # method for creating instances of DecisionTree which are nodes in our tree, and splitting the dataset into child nodes
     def treeFactory(self, X_train, y_train, path):
         if len(path) >= maxTreeDepth:
             return
@@ -96,45 +103,20 @@ class DecisionTree:
         self.left.treeFactory(X_train, y_train, path + [(featNum, featThr, op.__lt__)])
     
     
-    def classifier(self, sample):
-        
-        if self.featureThreshold and sample[self.featureNmbr] >= self.featureThreshold:
-            if self.right:
-                return self.right.classifier(sample)
-            else:
-                return self.predLabel
-            
-        if self.featureThreshold and sample[self.featureNmbr] < self.featureThreshold:
-            if self.left:
-                return self.left.classifier(sample)
-            else:
-                return self.predLabel
-        else:
-            return self.predLabel
-
-        
-    def classifierV2(self, sample):
-        if self.featureThreshold is None:
-             return predLabel
-        elif self.right is None and self.left is None:
-            return predLabel
-        else:
-            if self.featureThreshold and sample[self.featureNmbr] >= self.featureThreshold:
-                return self.right.classifier(sample)
-            if self.featureThreshold and sample[self.featureNmbr] < self.featureThreshold:
-                return self.left.classifier(sample)
-        
+    # method for selecting the most informative threshold of a given feature number
     def featureThresholdSelectorV2(self, X_train, y_train, featureNmbr, path):
         
         indicesOfTreeLabel = 0, 1
         errorRate = 1
         
+        # debug variable - number of samples in the current node
         self.subSetVolume = 0
         
         instancesOfFeatureLabel = np.zeros(256)
         instancesOfFeatureNotLabel = np.zeros(256)
         cumulativeThreshold = np.zeros(256)
-
+        
+        # throwing away samples which dont fit earlier constraints of the nodes
         for i in range(X_train.shape[0]):
             goodSample = True
             if path:
@@ -145,17 +127,19 @@ class DecisionTree:
                 if not goodSample:
                     continue
                     
-            # Processing only good samples
+            # Processing only samples with 2 correct labels
             if y_train[i] == treeLabels[0]:
                 instancesOfFeatureLabel[X_train[i,featureNmbr]] += 1
                 self.subSetVolume += 1
             elif y_train[i] == treeLabels[1]:
                 instancesOfFeatureNotLabel[X_train[i,featureNmbr]] += 1
                 self.subSetVolume += 1
-                
+        
+        # two arrays counting number of samples which get activated for each of the thresholds
         cumSumFeature = np.cumsum(instancesOfFeatureLabel[::-1])[::-1]
         cumSumNotFeature = np.cumsum(instancesOfFeatureNotLabel[::-1])[::-1]
         
+        # uninformative splits are prevented
         if cumSumFeature[0] == 0 and cumSumNotFeature[0] == 0: # Extra test, should never happen
             print("Possible Bug - no samples in subset")
             return 0, (0, 1), 1.1
@@ -164,9 +148,11 @@ class DecisionTree:
         if cumSumNotFeature[0] == 0: # nothing to split, only one type of labels
             return -2, (0, 1), 1.1
         
+        # the threshold is calculated, by taking the number that gets a division with highest accuracy
         np.subtract(cumSumFeature, cumSumNotFeature, cumulativeThreshold)
         featureThreshold = np.argmax(abs(cumulativeThreshold))
         
+        # the order of labels is decided and the error rate is given
         if featureThreshold != 0:
             if cumulativeThreshold[featureThreshold] >= 0:
                 indicesOfTreeLabel = 0, 1
@@ -178,38 +164,54 @@ class DecisionTree:
         return featureThreshold, indicesOfTreeLabel, errorRate
     
     
+    # method for selecting a feature number with most informative division
     def featureSelector(self, X_train, y_train, path):
         leastErrorRateFeatureIndex = 0
-        leastErrorRate = 1
         leastErrorRateFeatureThreshold = 0
         curFeatureLabelIndices = 0, 1
+        leastErrorRate = 1
+        
+        # iterates through all features
         for featNbr in range(X_train.shape[1]):
-        # for featNbr in (300, 305, 310, 315, 320, 325, 330, 335, 340): # DEBUG, HARDCODE
+        # for featNbr in (300, 305, 310, 315, 320, 325, 330, 335, 340): # DEBUG
+        
+            # prevents algorithm from slecting the same feature number for two consecutive nodes
             if path and featNbr != path[-1][0] or not path:
                 curFeature = self.featureThresholdSelectorV2(X_train, y_train, featNbr, path)
+                
+                # uninformative splits are passes on for later opperations
                 if curFeature[0] <= 0 and leastErrorRate == 1:
                     leastErrorRateFeatureIndex = None
                     leastErrorRateFeatureThreshold = curFeature[0]
                     curFeatureLabelIndices = curFeature[1]
-                    # No perform return, it leaves the loop if condition is satisfied.
+                
+                # good splits are slowly improved, by selecting the feature number with least error rate
                 if curFeature[2] < leastErrorRate:
                         leastErrorRateFeatureIndex = featNbr
                         leastErrorRateFeatureThreshold = curFeature[0]
                         curFeatureLabelIndices = curFeature[1]
                         leastErrorRate = curFeature[2]
+                        
         return leastErrorRateFeatureIndex, leastErrorRateFeatureThreshold, curFeatureLabelIndices, leastErrorRate
-
     
-    def audit(self, sample):
-        print(self.featureNmbr, self.featureThreshold, self.predLabel)
-        if self.featureThreshold and sample[self.featureNmbr] >= self.featureThreshold:
-            if self.right:
-                return self.right.audit(sample)
-        if self.featureThreshold and sample[self.featureNmbr] < self.featureThreshold:
-            if self.left:
-                return self.left.audit(sample)
-                   
     
+    # method for getting a predicted label from a given sample from the Tree we built
+    def classifierV2(self, sample):
+        # if that is a node with 100% accuracy (only samples of one label are left in this node)
+        if self.featureThreshold is None:
+            return predLabel
+        # this is satisfied if this is the last node in the tree, but because of depth constraint, we cannot go any deeper
+        elif self.right is None and self.left is None:
+            return predLabel
+        # end of recursion, returns the correct label for a given sample
+        else:
+            if sample[self.featureNmbr] >= self.featureThreshold:
+                return self.right.classifier(sample)
+            if sample[self.featureNmbr] < self.featureThreshold:
+                return self.left.classifier(sample)       
+    
+    
+    # debug function - prints all the tree information from its nodes
     def auditFull(self, depth = 0):
         print()
         print("depth =", depth)
@@ -219,31 +221,6 @@ class DecisionTree:
         for subTree in (self.left, self.right):
             if subTree:
                 subTree.auditFull(depth + 1)
-
-
-# In[5]:
-
-
-testWrapper = TreeLabelWrapper( (7, 2) )
-testWrapper.treeFactory(X_trainMnist[100:200], y_trainMnist[100:200])
-
-
-# In[6]:
-
-
-testWrapper.tree.auditFull()
-
-
-# In[19]:
-
-
-y_trainMnist[200:220]
-
-
-# In[17]:
-
-
-testWrapper.tree.classifierV2(X_trainMnist[117])
 
 
 # In[22]:
@@ -262,11 +239,24 @@ for k in range(100, 250):
             print("label:", y_trainMnist[k])
 
 
-# In[9]:
+# In[6]:
 
 
 treesGenerator()
-classifyAllTrees(X_trainMnist, y_trainMnist)
+classifyAllTrees(X_trainMnist[:300], y_trainMnist[:300])
+
+
+# In[7]:
+
+
+correctPred = 0
+for n in range(len(y_testMnist[:100])):
+    if decisionMaker(X_testMnist[n]) == y_testMnist[n]:
+        correctPred += 1
+    # print()
+    # print(decisionMaker(X_testMnist[n]))
+    # print(y_testMnist[n])
+print("Error rate is", correctPred/n)
 
 
 # In[ ]:
