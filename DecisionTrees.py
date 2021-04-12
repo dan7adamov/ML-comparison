@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[5]:
+# In[17]:
 
 
 import numpy as np
@@ -37,11 +37,12 @@ with gzip.open('C:\\Users\\danad\\Personal Project\\Individual Project\\t10k-lab
 
 # global variables
 treeLabels = None # FIX THIS TO NONE AFTER BUG TESTING
-maxTreeDepth = 5
-
+maxTreeDepth = 10
+# allTrees = []
 
 # generates all possible tuples with different label combinations and makes an empty tree with it
 def treesGenerator():
+    global allTrees
     allTrees = []
     for i in range(10):
         for j in range(i + 1, 10):
@@ -198,13 +199,16 @@ class DecisionTree:
     
     # method for getting a predicted label from a given sample from the Tree we built
     def classifierV2(self, sample):
+        
         # if that is a node with 100% accuracy (only samples of one label are left in this node)
         if self.featureThreshold is None:
             return self.predLabel
+        
         # this is satisfied if this is the last node in the tree, but because of depth constraint, we cannot go any deeper
         elif self.right is None and self.left is None:
             return self.predLabel
-        # end of recursion, returns the correct label for a given sample
+        
+        # recursion
         else:
             if sample[self.featureNmbr] >= self.featureThreshold:
                 return self.right.classifierV2(sample)
@@ -224,14 +228,14 @@ class DecisionTree:
                 subTree.auditFull(depth + 1)
 
 
-# In[6]:
+# In[20]:
 
 
 from PIL import Image
 import matplotlib.pyplot as plt
 
 testWrapper = TreeLabelWrapper( (2, 7) )
-testWrapper.treeFactory(X_trainMnist[:10000], y_trainMnist[:10000])
+testWrapper.treeFactory(X_trainMnist[:1000], y_trainMnist[:1000])
 
 # k = 117
 for k in range(100, 250):
@@ -239,11 +243,16 @@ for k in range(100, 250):
         pred = testWrapper.tree.classifierV2(X_trainMnist[k])
         if pred != y_trainMnist[k]:
             # plt.imshow((X_trainMnist[k,:]).astype(int).reshape(28,28))
-            print("prediction:", pred)
-            print("label:", y_trainMnist[k])
+            print("k", k, "prediction:", pred, "label:", y_trainMnist[k])
 
 
-# In[15]:
+# In[21]:
+
+
+testWrapper.tree.auditFull()
+
+
+# In[22]:
 
 
 treesGenerator()
