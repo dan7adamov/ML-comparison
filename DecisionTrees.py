@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[18]:
+# In[5]:
 
 
 import numpy as np
@@ -96,6 +96,7 @@ class DecisionTree:
             return
         
         # divison is informative so two new nodes are created and their parent node contains the split information
+        print(self.predLabel)
         self.featureNmbr, self.featureThreshold = featNum, featThr
         self.right = DecisionTree(None, None, treeLabels[labelIndices[0]])
         self.left = DecisionTree(None, None, treeLabels[labelIndices[1]])
@@ -199,10 +200,10 @@ class DecisionTree:
     def classifierV2(self, sample):
         # if that is a node with 100% accuracy (only samples of one label are left in this node)
         if self.featureThreshold is None:
-            return predLabel
+            return self.predLabel
         # this is satisfied if this is the last node in the tree, but because of depth constraint, we cannot go any deeper
         elif self.right is None and self.left is None:
-            return predLabel
+            return self.predLabel
         # end of recursion, returns the correct label for a given sample
         else:
             if sample[self.featureNmbr] >= self.featureThreshold:
@@ -223,7 +224,7 @@ class DecisionTree:
                 subTree.auditFull(depth + 1)
 
 
-# In[19]:
+# In[6]:
 
 
 from PIL import Image
