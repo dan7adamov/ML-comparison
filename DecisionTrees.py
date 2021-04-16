@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[17]:
+# In[15]:
 
 
 import numpy as np
@@ -165,6 +165,74 @@ class DecisionTree:
 
         return featureThreshold, indicesOfTreeLabel, errorRate
     
+    # method for selecting the most informative threshold of a given feature number
+    def featureThresholdSelectorV3(self, X_train, y_train, featureNmbr, path):
+        
+        indicesOfTreeLabel = 0, 1
+        errorRate = 1
+        
+        # debug variable - number of samples in the current node
+        self.subSetVolume = 0
+        
+        instancesOfFeatureLabel = np.zeros(256)
+        instancesOfFeatureNotLabel = np.zeros(256)
+        cumulativeThreshold = np.zeros(256)
+        
+        # throwing away samples which dont fit earlier constraints of the nodes
+        for i in range(X_train.shape[0]):
+            goodSample = True
+            if path:
+                for t in path: # t is a tuple -> (featureNumber, featureThreshold, operator)
+                    if not t[2] (X_train[i, t[0]], t[1]):
+                        goodSample = False
+                        break
+                if not goodSample:
+                    continue
+                    
+            # Processing only samples with 2 correct labels
+            if y_train[i] == treeLabels[0]:
+                instancesOfFeatureLabel[X_train[i,featureNmbr]] += 1
+                self.subSetVolume += 1
+            elif y_train[i] == treeLabels[1]:
+                instancesOfFeatureNotLabel[X_train[i,featureNmbr]] += 1
+                self.subSetVolume += 1
+        
+        # ammount of samples of each label type
+        sumLabel = np.sum(instancesOfFeatureLabel)
+        sumNotLabel = np.sum(instancesOfFeatureNotLabel)
+               
+        # uninformative splits are prevented
+        if sumLabel == 0 and sumNotLabel == 0: # Extra test, should never happen
+            print("Possible Bug - no samples in subset")
+            return 0, (0, 1), 1.1
+        if sumLabel == 0: # nothing to split, only one type of labels
+            return -1, (1, 0), 1.1
+        if sumNotLabel == 0: # nothing to split, only one type of labels
+            return -2, (0, 1), 1.1
+        
+        # find the most common greyscale number
+        featureArgmax = np.argmax(instancesOfFeatureLabel)
+        notFeatureArgmax = np.argmax(instancesOfFeatureNotLabel)
+        
+        # find the mean of the two numbers, which is a threshold
+        thresholdDiff = featureArgmax + notFeatureArgmax
+        featureThreshold = round(thresholdDiff / 2)
+        
+        # cumilitive array is calculated for finding error rate
+        cumSumFeature = np.cumsum(instancesOfFeatureLabel[::-1])[::-1]
+        cumSumNotFeature = np.cumsum(instancesOfFeatureNotLabel[::-1])[::-1]
+        
+        # the order of labels is decided and the error rate is given
+        if featureThreshold != 0:
+            if featureArgmax >= notFeatureArgmax:
+                indicesOfTreeLabel = 0, 1
+                errorRate = 1 - cumSumFeature[featureThreshold] / cumSumFeature[0]
+            else:
+                indicesOfTreeLabel = 1, 0
+                errorRate = 1 - cumSumNotFeature[featureThreshold] / cumSumNotFeature[0]
+
+        return featureThreshold, indicesOfTreeLabel, errorRate
+    
     
     # method for selecting a feature number with most informative division
     def featureSelector(self, X_train, y_train, path):
@@ -179,7 +247,7 @@ class DecisionTree:
         
             # prevents algorithm from slecting the same feature number for two consecutive nodes
             if path and featNbr != path[-1][0] or not path:
-                curFeature = self.featureThresholdSelectorV2(X_train, y_train, featNbr, path)
+                curFeature = self.featureThresholdSelectorV3(X_train, y_train, featNbr, path)
                 
                 # uninformative splits are passes on for later opperations
                 if curFeature[0] <= 0 and leastErrorRate == 1:
@@ -226,9 +294,10 @@ class DecisionTree:
         for subTree in (self.left, self.right):
             if subTree:
                 subTree.auditFull(depth + 1)
+                
 
 
-# In[20]:
+# In[16]:
 
 
 from PIL import Image
@@ -246,7 +315,18 @@ for k in range(100, 250):
             print("k", k, "prediction:", pred, "label:", y_trainMnist[k])
 
 
-# In[21]:
+# In[17]:
+
+
+for k in range(150, 250):
+    if y_testMnist[k] in [2, 7]:
+        pred = testWrapper.tree.classifierV2(X_testMnist[k])
+        if pred != y_testMnist[k]:
+            # plt.imshow((X_trainMnist[k,:]).astype(int).reshape(28,28))
+            print("k", k, "prediction:", pred, "label:", y_testMnist[k])
+
+
+# In[18]:
 
 
 testWrapper.tree.auditFull()
