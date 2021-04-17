@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[15]:
-
-
 import numpy as np
 import operator as op
 import gzip
@@ -36,9 +30,8 @@ with gzip.open('C:\\Users\\danad\\Personal Project\\Individual Project\\t10k-lab
 # Dowloaded Mnist dataset into train and test datasets(ratio 6:1 respectively) and have separate arrays for features and their corresponding labels
 
 # global variables
-treeLabels = None # FIX THIS TO NONE AFTER BUG TESTING
+treeLabels = None
 maxTreeDepth = 10
-# allTrees = []
 
 # generates all possible tuples with different label combinations and makes an empty tree with it
 def treesGenerator():
@@ -52,7 +45,6 @@ def treesGenerator():
 def classifyAllTrees(X_train, y_train):
     for t in allTrees:
         t.treeFactory(X_train, y_train)
-        print("Tree is split", t.labels)
 
 # returns the predicted label for a given sample, by looking at which label is most common from all possible Trees combinations
 def decisionMaker(sample):
@@ -60,8 +52,17 @@ def decisionMaker(sample):
     for t in allTrees:
         predLabels.append( t.tree.classifierV2(sample) )
     return max(set(predLabels), key = predLabels.count)
+
+# method for finding the error rate
+def errorRate(xTestSet, yTestSet):
+        numOfErrors = 0
+        for k in range(xTestSet.shape[0]): # testSet should be an np.array of rank 2
+            predLabel = decisionMaker(xTestSet[k])
+            if predLabel != yTestSet[k]:
+                numOfErrors += 1
+        return numOfErrors / xTestSet.shape[0]
     
-    
+
 # wrapper class facilitates generation of decision trees with different label tuples
 class TreeLabelWrapper:
     def __init__(self, labels):
@@ -91,13 +92,10 @@ class DecisionTree:
         featNum, featThr, labelIndices, errorRate = self.featureSelector(X_train, y_train, path)
         
         # do not create 'empty' nodes with uninformative divisions, or inadequate number of samples in the subset
-        if featThr < 0:            
-            return
-        if featNum is None:
+        if featThr < 0 or featNum is None:            
             return
         
         # divison is informative so two new nodes are created and their parent node contains the split information
-        print(self.predLabel)
         self.featureNmbr, self.featureThreshold = featNum, featThr
         self.right = DecisionTree(None, None, treeLabels[labelIndices[0]])
         self.left = DecisionTree(None, None, treeLabels[labelIndices[1]])
@@ -215,8 +213,7 @@ class DecisionTree:
         notFeatureArgmax = np.argmax(instancesOfFeatureNotLabel)
         
         # find the mean of the two numbers, which is a threshold
-        thresholdDiff = featureArgmax + notFeatureArgmax
-        featureThreshold = round(thresholdDiff / 2)
+        featureThreshold = round((featureArgmax + notFeatureArgmax) / 2)
         
         # cumilitive array is calculated for finding error rate
         cumSumFeature = np.cumsum(instancesOfFeatureLabel[::-1])[::-1]
@@ -247,21 +244,24 @@ class DecisionTree:
         
             # prevents algorithm from slecting the same feature number for two consecutive nodes
             if path and featNbr != path[-1][0] or not path:
+                # featureThreshold, indicesOfTreeLabel, errorRate = curFeature
                 curFeature = self.featureThresholdSelectorV3(X_train, y_train, featNbr, path)
                 
-                # uninformative splits are passes on for later opperations
-                if curFeature[0] <= 0 and leastErrorRate == 1:
-                    leastErrorRateFeatureIndex = None
-                    leastErrorRateFeatureThreshold = curFeature[0]
-                    curFeatureLabelIndices = curFeature[1]
+                # catches split which is not informative (featureThreshold = 0)
+                if curFeature[0] == 0:
+                    continue
+                
+                # node with a subset containing only one label
+                if curFeature[0] < 0:
+                    return None, curFeature[0], curFeature[1], 0
                 
                 # good splits are slowly improved, by selecting the feature number with least error rate
                 if curFeature[2] < leastErrorRate:
-                        leastErrorRateFeatureIndex = featNbr
-                        leastErrorRateFeatureThreshold = curFeature[0]
-                        curFeatureLabelIndices = curFeature[1]
-                        leastErrorRate = curFeature[2]
-                        
+                    leastErrorRateFeatureIndex = featNbr
+                    leastErrorRateFeatureThreshold = curFeature[0]
+                    curFeatureLabelIndices = curFeature[1]
+                    leastErrorRate = curFeature[2]
+                   
         return leastErrorRateFeatureIndex, leastErrorRateFeatureThreshold, curFeatureLabelIndices, leastErrorRate
     
     
@@ -281,8 +281,7 @@ class DecisionTree:
             if sample[self.featureNmbr] >= self.featureThreshold:
                 return self.right.classifierV2(sample)
             if sample[self.featureNmbr] < self.featureThreshold:
-                return self.left.classifierV2(sample)       
-    
+                return self.left.classifierV2(sample)
     
     # debug function - prints all the tree information from its nodes
     def auditFull(self, depth = 0):
@@ -294,66 +293,3 @@ class DecisionTree:
         for subTree in (self.left, self.right):
             if subTree:
                 subTree.auditFull(depth + 1)
-                
-
-
-# In[16]:
-
-
-from PIL import Image
-import matplotlib.pyplot as plt
-
-testWrapper = TreeLabelWrapper( (2, 7) )
-testWrapper.treeFactory(X_trainMnist[:1000], y_trainMnist[:1000])
-
-# k = 117
-for k in range(100, 250):
-    if y_trainMnist[k] in [2, 7]:
-        pred = testWrapper.tree.classifierV2(X_trainMnist[k])
-        if pred != y_trainMnist[k]:
-            # plt.imshow((X_trainMnist[k,:]).astype(int).reshape(28,28))
-            print("k", k, "prediction:", pred, "label:", y_trainMnist[k])
-
-
-# In[17]:
-
-
-for k in range(150, 250):
-    if y_testMnist[k] in [2, 7]:
-        pred = testWrapper.tree.classifierV2(X_testMnist[k])
-        if pred != y_testMnist[k]:
-            # plt.imshow((X_trainMnist[k,:]).astype(int).reshape(28,28))
-            print("k", k, "prediction:", pred, "label:", y_testMnist[k])
-
-
-# In[18]:
-
-
-testWrapper.tree.auditFull()
-
-
-# In[22]:
-
-
-treesGenerator()
-classifyAllTrees(X_trainMnist[:300], y_trainMnist[:300])
-
-
-# In[17]:
-
-
-correctPred = 0
-for n in range(len(y_testMnist[:100])):
-    if decisionMaker(X_testMnist[n]) == y_testMnist[n]:
-        correctPred += 1
-    # print()
-    # print(decisionMaker(X_testMnist[n]))
-    # print(y_testMnist[n])
-print("Error rate is", correctPred/n)
-
-
-# In[ ]:
-
-
-
-
