@@ -1,6 +1,7 @@
 import numpy as np
 import operator as op
 import gzip
+import pickle as pkl
 from sklearn.model_selection import train_test_split as tts
 
 # uspsTrain = np.genfromtxt('C:\\Users\\Dan Adamov\\Desktop\\RHUL\\3rd Year\\CS3920\\zip.train\\zip.train', delimiter = " ", autostrip = True)
@@ -45,6 +46,11 @@ def treesGenerator():
 def classifyAllTrees(X_train, y_train):
     for t in allTrees:
         t.treeFactory(X_train, y_train)
+
+def classifyFromTree(X_train, y_train, treeIndex, treeFinalIndex):
+    for i in range(treeIndex, treeFinalIndex+1):
+        allTrees[i].treeFactory(X_train, y_train)
+        pkl.dump( allTrees, open( "allTrees-{0:0{1}}".format(i, 3), "wb" ) )
 
 # returns the predicted label for a given sample, by looking at which label is most common from all possible Trees combinations
 def decisionMaker(sample):
@@ -101,67 +107,7 @@ class DecisionTree:
         self.left = DecisionTree(None, None, treeLabels[labelIndices[1]])
         self.right.treeFactory(X_train, y_train, path + [(featNum, featThr, op.__ge__)])
         self.left.treeFactory(X_train, y_train, path + [(featNum, featThr, op.__lt__)])
-    
-    
-    # method for selecting the most informative threshold of a given feature number
-    def featureThresholdSelectorV2(self, X_train, y_train, featureNmbr, path):
         
-        indicesOfTreeLabel = 0, 1
-        errorRate = 1
-        
-        # debug variable - number of samples in the current node
-        self.subSetVolume = 0
-        
-        instancesOfFeatureLabel = np.zeros(256)
-        instancesOfFeatureNotLabel = np.zeros(256)
-        cumulativeThreshold = np.zeros(256)
-        
-        # throwing away samples which dont fit earlier constraints of the nodes
-        for i in range(X_train.shape[0]):
-            goodSample = True
-            if path:
-                for t in path: # t is a tuple -> (featureNumber, featureThreshold, operator)
-                    if not t[2] (X_train[i, t[0]], t[1]):
-                        goodSample = False
-                        break
-                if not goodSample:
-                    continue
-                    
-            # Processing only samples with 2 correct labels
-            if y_train[i] == treeLabels[0]:
-                instancesOfFeatureLabel[X_train[i,featureNmbr]] += 1
-                self.subSetVolume += 1
-            elif y_train[i] == treeLabels[1]:
-                instancesOfFeatureNotLabel[X_train[i,featureNmbr]] += 1
-                self.subSetVolume += 1
-        
-        # two arrays counting number of samples which get activated for each of the thresholds
-        cumSumFeature = np.cumsum(instancesOfFeatureLabel[::-1])[::-1]
-        cumSumNotFeature = np.cumsum(instancesOfFeatureNotLabel[::-1])[::-1]
-        
-        # uninformative splits are prevented
-        if cumSumFeature[0] == 0 and cumSumNotFeature[0] == 0: # Extra test, should never happen
-            print("Possible Bug - no samples in subset")
-            return 0, (0, 1), 1.1
-        if cumSumFeature[0] == 0: # nothing to split, only one type of labels
-            return -1, (1, 0), 1.1
-        if cumSumNotFeature[0] == 0: # nothing to split, only one type of labels
-            return -2, (0, 1), 1.1
-        
-        # the threshold is calculated, by taking the number that gets a division with highest accuracy
-        np.subtract(cumSumFeature, cumSumNotFeature, cumulativeThreshold)
-        featureThreshold = np.argmax(abs(cumulativeThreshold))
-        
-        # the order of labels is decided and the error rate is given
-        if featureThreshold != 0:
-            if cumulativeThreshold[featureThreshold] >= 0:
-                indicesOfTreeLabel = 0, 1
-                errorRate = 1 - cumSumFeature[featureThreshold] / cumSumFeature[0]
-            else:
-                indicesOfTreeLabel = 1, 0
-                errorRate = 1 - cumSumNotFeature[featureThreshold] / cumSumNotFeature[0]
-
-        return featureThreshold, indicesOfTreeLabel, errorRate
     
     # method for selecting the most informative threshold of a given feature number
     def featureThresholdSelectorV3(self, X_train, y_train, featureNmbr, path):
@@ -174,7 +120,6 @@ class DecisionTree:
         
         instancesOfFeatureLabel = np.zeros(256)
         instancesOfFeatureNotLabel = np.zeros(256)
-        cumulativeThreshold = np.zeros(256)
         
         # throwing away samples which dont fit earlier constraints of the nodes
         for i in range(X_train.shape[0]):
@@ -195,13 +140,13 @@ class DecisionTree:
                 instancesOfFeatureNotLabel[X_train[i,featureNmbr]] += 1
                 self.subSetVolume += 1
         
-        # ammount of samples of each label type
+        # ammount of samples of each label type in the current node
         sumLabel = np.sum(instancesOfFeatureLabel)
         sumNotLabel = np.sum(instancesOfFeatureNotLabel)
                
         # uninformative splits are prevented
-        if sumLabel == 0 and sumNotLabel == 0: # Extra test, should never happen
-            print("Possible Bug - no samples in subset")
+        if sumLabel == 0 and sumNotLabel == 0: # test for when max depth is reached
+            # print("Possible Bug - no samples in subset or max depth is reached by the tree")
             return 0, (0, 1), 1.1
         if sumLabel == 0: # nothing to split, only one type of labels
             return -1, (1, 0), 1.1
